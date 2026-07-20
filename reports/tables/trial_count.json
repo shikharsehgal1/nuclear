@@ -1,0 +1,12 @@
+{
+  "per_family": {
+    "A_long": 72,
+    "A_longshort": 72,
+    "B_trend": 216,
+    "F_crossline": 72,
+    "G_sput_yca": 72,
+    "H_hedged_resid": 72,
+    "H_unhedged_resid": 72
+  },
+  "total": 648
+}
