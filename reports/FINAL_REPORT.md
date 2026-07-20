@@ -184,6 +184,39 @@ occurred within one working session by one author, so "frozen before results"
 rests on same-day commit timestamps rather than independent attestation — is
 accepted and disclosed here.
 
+## 10b. Addendum — live-market verification (2026-07-20, regular session)
+
+Real quotes and borrow were captured live (data/raw/live_quotes/) and the
+surviving strategy re-run with measured instead of assumed costs
+(reports/tables/real_cost_scenarios.csv):
+
+| Input | Assumed | Measured (settled book, 10:03 ET) |
+|---|---|---|
+| U.UN half-spread | 7.5 bps | **5.8 bps** (3¢ on C$25.72) |
+| U.U half-spread | 12.5 bps | 2.7 bps |
+| YCA.L half-spread | 15 bps | 5–14 bps (intraday range) |
+| U.UN short borrow | 300 bps | **277 bps** (SRUUF, IBKR; 1y mean 242, max 348) |
+| YCA short borrow fee | 150 bps | **68 bps** (YLLXF; 1y mean 46, max 114) |
+| YCA short availability | assumed available | **fragile: 1y min 1,000 shares, median 100k (OTC line)** |
+
+G_sput_yca at measured costs: dev 1.97 / holdout **1.24** net Sharpe
+(~23%/yr on deployed notional); 2× measured costs → holdout 0.81; 1-day lag →
+0.71; joint 2×+lag worst case → **0.30–0.40** (vs 0.13 under the old, more
+punitive assumptions). The red team's joint-stress collapse was thus partly an
+artifact of conservative cost assumptions — the measured-cost joint stress is
+thin but positive. Cost assumptions are hereby validated; the remaining open
+risks are **statistical thinness** (holdout p≈0.10 unadjusted, ~0.3
+selection-adjusted; pooled DSR gate still failed) and **YCA short
+availability**, which retail-accessible channels cannot guarantee.
+
+Options landscape (same session): U.UN has a real Montréal Exchange chain
+(root "U", CAD line only) — 13 expiries to Jun-2027, 29,247 total OI
+(~C$75M notional), 318/322 lines two-sided, ATM IV 35.2% vs 27.6% realized
+(rich), slight call skew (36.2 vs 34.1), but bid-ask ≈ 10–33% of premium —
+viable for bounded-risk hedging, not for spread-sensitive vol strategies.
+No options exist on U.U, SRUUF, YCA (any venue), or meaningfully on PHYS;
+CCJ options are deep (LEAPs to 2028); URNM/URA moderate.
+
 ## 11. What additional data would raise confidence
 
 1. Licensed UxC/TradeTech point-in-time assessments (true NAV input).

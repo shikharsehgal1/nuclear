@@ -1,0 +1,5 @@
+scenario,dev_sharpe,holdout_sharpe,full_sharpe,ann_ret_full
+real_1x,1.97,1.24,1.79,0.2325
+real_2x,1.57,0.81,1.38,0.1798
+real_2x_lag1,0.44,0.3,0.4,0.0537
+real_1x_lag1,0.83,0.71,0.8,0.1064

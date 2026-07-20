@@ -57,3 +57,13 @@
     Minor items logged, not blocking: financing_spread configured but never
     charged (shorts' borrow IS charged); YCA parquet includes a live partial
     bar for 2026-07-20 (excluded from analysis, which ends 2026-07-17).
+14. **Live verification pass (2026-07-20, regular session):** measured
+    half-spreads (U.UN 5.8bps, U.U 2.7bps, YCA 5-14bps), IBKR borrow (SRUUF
+    277bps, YLLXF 68bps fee but availability min 1k shares over 1y), MX U.UN
+    options chain (29k OI, ATM IV 35.2%, spreads 10-33% of premium). G re-run
+    at measured costs: holdout 1.24 net; joint 2x+lag stress 0.30-0.40 (vs
+    0.13 under assumed costs). Cost assumptions validated as conservative.
+    Verdict unchanged in kind (paper-trade first) but the execution-cost
+    overhang is resolved; open risks now: statistical thinness + YCA borrow
+    availability. FINAL_REPORT section 10b added. Raw captures in
+    data/raw/live_quotes/ (gitignored by raw-data policy, on disk).
