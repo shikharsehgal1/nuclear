@@ -1,0 +1,39 @@
+# Conservative execution-cost assumptions (all one-way unless stated).
+# Cost model: commission + half_spread + fx_spread (if converting) + borrow (short)
+#             + financing + impact. Robustness runs at 0.5x/1x/2x/3x multipliers.
+
+defaults:
+  commission_bps: 1.0            # per side, institutional-ish; retail higher
+  min_commission_usd: 1.0
+  fx_spread_bps: 2.5             # one-way CAD/USD conversion at institutional rates
+  financing_spread_bps_annual: 50   # over T-bill for cash borrow
+  impact_model: square_root
+  impact_coefficient: 0.1        # sigma * sqrt(Q/ADV) * coeff, in daily-vol units
+  participation_limit_adv: 0.05
+
+half_spread_bps:
+  # Estimated from close-to-close vol and dollar volume where quotes unavailable
+  # (Corwin-Schultz style estimates cross-checked at ingest). These are floors.
+  U-UN.TO: 7.5      # ~1-2c on ~$17-25 unit; widen in stress
+  U-U.TO: 12.5      # thinner USD line
+  YCA.L: 15.0
+  URNM: 5.0
+  URA: 3.0
+  CCJ: 2.0
+  PHYS: 2.5
+  PSLV: 3.0
+  CEF: 4.0
+  SPPP: 15.0
+  COP-UN.TO: 25.0
+  default: 10.0
+
+borrow_bps_annual:
+  # Historical borrow for U.UN is NOT observable from free data. UNVERIFIED.
+  # Short strategies must be reported separately and flagged as borrow-assumption-dependent.
+  U-UN.TO: 300
+  U-U.TO: 300
+  YCA.L: 150
+  default: 100
+  unavailable_action: flag_and_exclude_from_headline
+
+stress_multipliers: [0.5, 1.0, 2.0, 3.0]

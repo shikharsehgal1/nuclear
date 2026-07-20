@@ -1,0 +1,90 @@
+# Point-in-time data source registry.
+# Every source records: how obtained, timezone of observation, when the value
+# becomes known to a trader (available_at policy), currency/units, revision
+# policy, licensing, quality tier, and fallback.
+#
+# Tiers:
+#   1 = licensed point-in-time benchmark (NOT available in this project)
+#   2 = public official values with reliable timestamps
+#   3 = public proxy
+#   4 = reconstructed / inferred
+#
+# available_at policies:
+#   exchange_close      -> observation is the exchange close; tradeable next session
+#   next_morning_utc    -> published overnight; treat as available before next open
+#   publication_lagged  -> apply explicit lag_days before use
+#   unknown_conservative-> apply +1 business day lag
+
+yahoo_equities:
+  method: yfinance (Yahoo Finance v8 chart API)
+  access: free, unofficial; licensing prohibits redistribution; research use only
+  frequency: daily
+  observation_timezone: exchange-local
+  available_at_policy: exchange_close
+  revision_policy: prices occasionally corrected retroactively; splits/dividends re-adjusted
+  adjustment: fetch unadjusted (auto_adjust=false) and keep adj_close column
+  quality_tier: 3
+  known_issues:
+    - no bid/ask history; spreads must be estimated
+    - Yahoo volume for TSX lines can miss odd lots / dark venues
+  tickers:
+    U-UN.TO:   {name: Sprott Physical Uranium Trust (CAD line), currency: CAD, exchange: TSX, required: true}
+    U-U.TO:    {name: Sprott Physical Uranium Trust (USD line), currency: USD, exchange: TSX, required: true}
+    SRUUF:     {name: SPUT OTC (verify symbol at ingest), currency: USD, exchange: OTC, required: false}
+    YCA.L:     {name: Yellow Cake PLC, currency: GBp, exchange: LSE, required: true, note: prices in pence}
+    URNM:      {name: Sprott Uranium Miners ETF, currency: USD, exchange: NYSEArca, required: true}
+    URA:       {name: Global X Uranium ETF, currency: USD, exchange: NYSEArca, required: true}
+    CCJ:       {name: Cameco (NYSE), currency: USD, exchange: NYSE, required: true}
+    CCO.TO:    {name: Cameco (TSX), currency: CAD, exchange: TSX, required: false}
+    NLR:       {name: VanEck Uranium+Nuclear ETF, currency: USD, exchange: NYSEArca, required: false}
+    KAP.IL:    {name: Kazatomprom GDR, currency: USD, exchange: LSE-IOB, required: false}
+    PHYS:      {name: Sprott Physical Gold Trust, currency: USD, exchange: NYSEArca, required: true}
+    PSLV:      {name: Sprott Physical Silver Trust, currency: USD, exchange: NYSEArca, required: true}
+    CEF:       {name: Sprott Physical Gold & Silver Trust, currency: USD, exchange: NYSEArca, required: true}
+    SPPP:      {name: Sprott Physical Platinum & Palladium Trust, currency: USD, exchange: NYSEArca, required: false}
+    COP-UN.TO: {name: Sprott Physical Copper Trust, currency: CAD, exchange: TSX, required: false}
+    GLD:       {name: SPDR Gold Shares (gold spot proxy for PHYS synthetic NAV), currency: USD, exchange: NYSEArca, required: false}
+    SLV:       {name: iShares Silver Trust (silver proxy), currency: USD, exchange: NYSEArca, required: false}
+    CAD=X:     {name: USD/CAD, currency: CAD-per-USD, exchange: FX, required: true}
+    GBPUSD=X:  {name: GBP/USD, currency: USD-per-GBP, exchange: FX, required: true}
+    ^IRX:      {name: 13-week T-bill rate (financing proxy), currency: pct, exchange: index, required: true}
+
+sprott_fund_data:
+  method: to-be-filled from endpoint discovery (docs/DATA_ENDPOINTS.md); HTML-table fallback
+  access: public website; respect robots and rate limits
+  fields: [nav_per_unit_usd, nav_per_unit_cad, total_nav, units_outstanding,
+           u3o8_lbs, uranium_market_value, cash_and_other, premium_discount, sprott_spot_usd]
+  frequency: daily (TSX business days)
+  observation_timezone: America/Toronto
+  nav_valuation_time_local: "16:00"   # confirm in MECHANICS.md
+  available_at_policy: next_morning_utc   # NAV published evening after close; conservative: next open
+  revision_policy: unknown; snapshot raw responses to detect revisions
+  quality_tier: 2
+  known_gaps:
+    - intraday publication timestamp not directly observable historically -> conservative +1 open lag
+
+uranium_spot_assessments:
+  uxc:       {access: paid/licensed, tier: 1, status: NOT LICENSED - interface stub only}
+  tradetech: {access: paid/licensed, tier: 1, status: NOT LICENSED - interface stub only}
+  numerco:   {access: public current value only; no public history, tier: 3, status: current-only}
+  cameco_monthly:
+    access: public
+    method: scrape cameco.com uranium price tables
+    frequency: monthly (month-end UxC/TradeTech average republication)
+    available_at_policy: publication_lagged
+    lag_days: 3
+    quality_tier: 2
+  sprott_reported_spot:
+    note: Sprott publishes the spot value used in NAV on the fund page; captured via sprott_fund_data
+    quality_tier: 2
+
+cme_uranium_futures:
+  method: CME public settlement pages (often bot-blocked); fallback Yahoo continuous front contract if listed
+  status: attempt at ingest; document failure honestly if inaccessible
+  quality_tier: 3
+  note: UX contract is financially settled vs UxC month-end spot; thin volume/OI - verify in MECHANICS.md
+
+predecessor_upc:
+  note: Uranium Participation Corp (TSX:U) delisted at 2021-07-19 conversion; no free point-in-time
+        NAV history identified. Pre-2021 regime treated as unavailable unless a Tier-2 source is found.
+  status: excluded pending source discovery

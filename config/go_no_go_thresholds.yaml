@@ -1,0 +1,30 @@
+# GO/NO-GO criteria. Frozen 2026-07-20 BEFORE viewing final out-of-sample
+# results. These are defaults to be justified, not retroactively altered.
+
+go_criteria:
+  net_oos_sharpe_min: 0.75            # on untouched holdout, net of 1x costs
+  net_sharpe_at_2x_costs_min: 0.50
+  positive_walk_forward_folds_min_frac: 0.5
+  max_single_year_pnl_share: 0.50
+  max_top5_trade_pnl_share: 0.50
+  neighbor_parameters_profitable: true   # +-1 grid step must remain net-positive
+  one_day_lag_survives: true             # net Sharpe at lag+1 >= 50% of base
+  deflated_sharpe_min: 0.90              # DSR probability across all logged trials
+  economic_mechanism_documented: true
+  feasible_at_capital_usd: 1000000
+  max_dd_vs_cagr_max_ratio: 3.0
+  beats_buy_and_hold_and_beta: true      # residual alpha vs SPUT B&H + uranium beta
+
+automatic_rejection:
+  - unresolved_lookahead
+  - unclear_nav_publication_timing_for_signal
+  - fills_at_non_executable_prices        # e.g., assessed spot used as a fill
+  - alpha_only_gross
+  - alpha_only_in_sample
+  - single_parameter_island
+  - unstable_hedge_ratios                 # sign flips or >50% quarter-over-quarter swings
+  - requires_unmodeled_short_borrow
+  - impact_exceeds_edge_at_target_capital
+  - interpolated_data_dependency
+  - single_event_dependency
+  - no_plausible_mechanism

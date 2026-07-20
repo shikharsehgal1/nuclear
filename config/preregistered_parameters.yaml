@@ -1,0 +1,35 @@
+# PRE-REGISTERED parameter grids. Frozen 2026-07-20 BEFORE any strategy
+# performance was computed on real data. Do not extend after seeing results;
+# any change requires a dated entry in docs/DECISION_LOG.md and invalidates
+# the untouched holdout for affected strategies.
+#
+# Grid size is deliberately small: |z_window| x |entry| x |exit| = 4*3*2 = 24
+# core combinations per family; trend adds 3; holding cap 3; rebalance 2.
+
+sample:
+  sput_start: 2021-07-26          # first real SPUT trading day (UPC excluded, see MECHANICS)
+  holdout_frac: 0.25              # final ~25% of sample untouched until parameters frozen
+  walk_forward:
+    min_train_days: 378
+    test_days: 63
+    embargo_days: 5
+
+grids:
+  z_window: [20, 60, 120, 252]
+  entry_z: [1.0, 1.5, 2.0]
+  exit_z: [0.0, 0.5]
+  trend_window: [60, 120, 200]
+  holding_cap_days: [10, 20, 40]
+  rebalance: [daily, weekly]
+
+execution:
+  fill: next_open
+  signal_lag_days: 0              # base case: NAV published evening, trade next open
+  lag_stress: [1]                 # robustness: one extra day
+
+selection_metric: net_sharpe_train   # walk-forward fold selection criterion; fixed
+
+trial_accounting:
+  # for deflated Sharpe: total distinct (strategy family x grid point) evaluations
+  # updated as families are run; each family logs its own count in reports/
+  policy: count_every_grid_point_ever_evaluated
