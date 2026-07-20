@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import numpy as np
 import pandas as pd
 
 SPUT_START = pd.Timestamp("2021-07-26")  # first real SPUT trading day post-UPC conversion
