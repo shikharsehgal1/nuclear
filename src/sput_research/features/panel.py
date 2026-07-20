@@ -45,8 +45,8 @@ def build_instrument_frame(symbol: str) -> pd.DataFrame:
 
 def attach_sprott(panel: pd.DataFrame, sprott: pd.DataFrame | None) -> pd.DataFrame:
     """sprott frame schema (from ingestion.sprott):
-    date, nav_usd, nav_cad, total_nav_usd, units_outstanding, u3o8_lbs,
-    uranium_value_usd, cash_and_other_usd, premium_discount_published, spot_usd
+    date, nav_usd, price_usd_published, premium_discount_published,
+    u3o8_lbs (weekly stamps), lbs_acquired, lbs_cumulative
     """
     if sprott is None or sprott.empty:
         return panel
@@ -77,11 +77,12 @@ def build_panel(sprott: pd.DataFrame | None = None) -> pd.DataFrame:
         sput_rows = attach_sprott(panel[sput_mask].copy(), sprott)
         panel = pd.concat([sput_rows, panel[~sput_mask]], ignore_index=True)
 
-    # premium/discount vs published NAV in matching currency
+    # premium/discount vs published USD NAV (CAD line converted via same-close FX)
     if "nav_usd" in panel.columns:
         cad = panel["instrument"] == "U-UN.TO"
         usd = panel["instrument"].isin(["U-U.TO", "SRUUF"])
-        panel.loc[cad, "premium_discount"] = panel.loc[cad, "close"] / panel.loc[cad, "nav_cad"] - 1
+        panel.loc[cad, "premium_discount"] = (
+            panel.loc[cad, "close"] / panel.loc[cad, "usdcad"] / panel.loc[cad, "nav_usd"] - 1)
         panel.loc[usd, "premium_discount"] = panel.loc[usd, "close"] / panel.loc[usd, "nav_usd"] - 1
         # availability stamps for NAV-derived signals
         panel.loc[sput_mask, "signal_available_at"] = panel.loc[sput_mask, "nav_published_at"]
