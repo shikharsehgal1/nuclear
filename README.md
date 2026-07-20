@@ -1,5 +1,9 @@
 # nuclear
 
+**TL;DR:** two publicly traded vehicles hold the exact same thing — physical uranium sitting in warehouses. SPUT (`U.UN`, toronto) and Yellow Cake (`YCA.L`, london). because neither one lets you redeem shares for the actual uranium, their prices drift away from the metal *and from each other* based on pure investor flows. the trade: take the log ratio of their USD prices, z-score it over 120 days, and when it stretches past ±1 standard deviation, buy the cheap one and short the rich one, half your money each side. exit when the gap closes halfway (z back inside ±0.5) or after 10 days, whichever comes first. thats it — no forecasting, youre just betting that two containers of the same rock dont stay mispriced against each other for long. backtests at ~23%/yr net of real measured costs, sharpe ~1.4 over 8 years including a pre-2021 period the rule was never fitted on. catch: it caps out around $500k (yellow cake is illiquid), needs a margin account to short, and the edge gets thin if your execution is sloppy. everything below is the receipts.
+
+---
+
 so this started with a simple question: the Sprott Physical Uranium Trust (SPUT, `U.UN` on the TSX) trades at like a -5 to -19% discount to its NAV basically all the time. thats a trust that just holds physical uranium. can you trade that? is it free money?
 
 short answer: no its not free money, and most of the "obvious" trades dont work. but one pair trade survived everything i threw at it and its actually implementable if you're small. full writeup below, all the code is here, one command reproduces everything.
@@ -80,6 +84,18 @@ numbers, all net of costs:
 ![param surface](reports/figures/16_param_surface_G.png)
 ![best trades removed](reports/figures/20_best_trades_removed.png)
 ![cost sensitivity](reports/figures/17_cost_sensitivity.png)
+
+## the 2018-2021 pre-sample test (this is the one that matters)
+
+biggest objection to all of the above: 5 years of data, hundreds of parameter combos tried across all the strategies, maybe the survivor is just the lucky one. fair. so heres the strongest test i could construct.
+
+SPUT's predecessor was Uranium Participation Corp — same idea, a listed company that just held uranium, trading since 2006. and yellow cake IPO'd july 2018. since the signal is a z-score of a log price *ratio*, the UPC→SPUT share conversion ratio literally cancels out of the math. which means the exact frozen rule could be run on 2018-2021 UPC-vs-YCA — data the rule was **never fitted on, never even looked at during development**. one shot, no retuning allowed.
+
+result: **net sharpe 1.02, +13.8%/yr, positive all four calendar years, worst month -2.8% (that was march 2020, covid).** max drawdown -10%. and the stress pattern replicates exactly like the main sample — fine at 2x costs (0.55) or 1 day lag (0.54) individually, thin when you stack both (0.07).
+
+splicing everything together, 2018-2026 is ~8.2 years at net sharpe 1.44. and if you exponentially down-weight the older regime (since UPC was a different corporate structure), the weighted sharpe barely moves — 1.49 to 1.50 whether you use a 2, 3 or 5 year half-life. the answer doesnt depend on how you weight the eras, which is what you want to see.
+
+(couldnt push past 8.2y btw — yellow cake simply didnt exist before mid-2018, and the discount-based strategies cant extend at all bc UPC's NAV history isnt freely available anywhere. also full transparency: my first pass at this test had the legs inverted and showed -1.95, which briefly gave me a heart attack. caught it against the strategy code's sign convention, its logged in the decision log.)
 
 ## then i tried to kill it
 

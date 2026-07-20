@@ -75,3 +75,21 @@
     short leg (IBKR $2k minimum equity — right at the boundary); odd-lot
     fills on TSX at ~39 shares; all-USD variant possible via SRUUF/YLLXF to
     avoid FX conversions. Statistical caveats unchanged.
+16. **Pre-sample validation (user-requested history extension):** Yellow Cake
+    IPO'd 2018-07, so the pair extends to ~8.2y max (not 10-15y); SPUT discount
+    strategies cannot extend (no free UPC NAV history). The frozen G rule
+    (z120/1.0/0.5/cap10) was run ONCE on 2018-10..2021-07 UPC-vs-YCA (constant
+    conversion ratio cancels in the log-ratio z-score; segments not bridged
+    across the 2021 break): net Sharpe 1.02, +13.8%/yr, positive all 4 years,
+    maxDD -10.2%, COVID worst month -2.8%. Stresses: 2x costs 0.55, lag1 0.54,
+    joint 0.07 (same pattern as main sample). Spliced 2018-2026: Sharpe 1.44
+    unweighted; exponential decay weighting at 2/3/5y half-lives gives
+    1.49-1.50 (weighting-insensitive). PSR(>0)=1.00 on the splice; the
+    pre-sample segment alone is selection-free (p~0.04). TRANSPARENCY NOTE:
+    the first pre-sample run had inverted leg signs (showed -1.95) — caught
+    against family_G's convention and corrected; both runs preserved in
+    session history. Consequence: the multiple-testing objection is
+    substantially weakened (mechanism confirmed in a second regime under a
+    different corporate structure); verdict remains paper-trade-first because
+    joint-friction sensitivity and YCA borrow availability are unchanged.
+    Output: reports/tables/presample_2018_2021.csv.

@@ -217,6 +217,34 @@ viable for bounded-risk hedging, not for spread-sensitive vol strategies.
 No options exist on U.U, SRUUF, YCA (any venue), or meaningfully on PHYS;
 CCJ options are deep (LEAPs to 2028); URNM/URA moderate.
 
+## 10c. Addendum — pre-sample validation, 2018–2021 (predecessor regime)
+
+Yellow Cake's 2018-07 IPO bounds the pair's maximum history at ~8.2 years.
+Because the G signal is a rolling z-score of a log price ratio, the unknown
+UPC→SPUT conversion ratio cancels, so the frozen rule could be run — once,
+untuned — on Uranium Participation Corp vs Yellow Cake, 2018-10 → 2021-07-16
+(segments kept separate across the structural break; nothing bridged):
+
+| Pre-sample (never seen, never tuned) | Result |
+|---|---|
+| Net Sharpe | **1.02** (+13.8%/yr, maxDD −10.2%) |
+| Calendar years positive | 4 of 4 (incl. COVID; worst month −2.8%) |
+| 2× costs / 1-day lag / joint | 0.55 / 0.54 / 0.07 |
+
+The joint-stress fragility replicates exactly, which is honest consistency.
+Spliced 2018–2026 (2,061 days): net Sharpe 1.44; exponential-decay-weighted
+Sharpe is 1.49–1.50 for half-lives of 2, 3 and 5 years (regime-weighting
+insensitive). The pre-sample segment is selection-free (single trial,
+standalone p≈0.04), so it substantially weakens the pooled-DSR objection: the
+mechanism now has confirmation in a second regime under a different corporate
+structure (corporation vs trust, no ATM vs ATM). It does not change the
+capacity bound, the YCA borrow-availability risk, or the joint-friction
+sensitivity — the paper-trade-first recommendation stands, with materially
+higher confidence that the underlying effect is real.
+(Transparency: the first pre-sample computation had inverted leg signs and
+showed −1.95; the error was caught against family_G's sign convention and
+corrected — both runs are preserved in the decision log.)
+
 ## 11. What additional data would raise confidence
 
 1. Licensed UxC/TradeTech point-in-time assessments (true NAV input).
