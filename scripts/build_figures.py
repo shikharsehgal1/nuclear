@@ -13,7 +13,7 @@ import pandas as pd
 import yaml
 
 from sput_research.nav.synthetic import build_returns_frame
-from sput_research.paths import CONFIG, FIGURES, PROCESSED, TABLES
+from sput_research.paths import CONFIG, FIGURES, TABLES
 from sput_research.statistics.metrics import sharpe
 from sput_research.statistics.walkforward import holdout_split
 from sput_research.strategies.families import (
@@ -228,7 +228,6 @@ def main() -> int:
     blocks.sort(key=lambda b: -b[2])
     fig, ax = plt.subplots(figsize=(6, 3))
     for n in [0, 1, 3, 5]:
-        drop = {b[0] for b in blocks[:n]}
         mask = pd.Series(True, index=r.index)
         for b in blocks[:n]:
             mask.loc[b[0]:b[1]] = False

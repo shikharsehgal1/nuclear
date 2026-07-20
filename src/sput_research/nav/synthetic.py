@@ -14,7 +14,6 @@ vs Numerco, and (c) build a 'live' synthetic premium for H-D.
 
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 

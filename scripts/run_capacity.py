@@ -17,10 +17,9 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from sput_research.backtest.engine import run_backtest
 from sput_research.paths import CONFIG, TABLES
 from sput_research.statistics.metrics import sharpe
-from sput_research.strategies.families import FAMILY_BUILDERS, cost_spec_for, run_legs
+from sput_research.strategies.families import FAMILY_BUILDERS, run_legs
 
 CAPITALS = [100_000, 500_000, 1_000_000, 5_000_000, 10_000_000, 25_000_000]
 PLIMITS = [0.01, 0.025, 0.05, 0.10]
