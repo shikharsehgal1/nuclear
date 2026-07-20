@@ -1,8 +1,12 @@
 # LIVE_SPEC — paper trading only
 
 **Status: CONDITIONAL NO-GO for real capital.** G_sput_yca passed every
-economic/robustness/holdout gate except the pooled deflated-Sharpe criterion,
-and its short-leg borrow assumptions are unverified. This document specifies a
+individual economic/robustness/holdout gate except the pooled deflated-Sharpe
+criterion, but the red team showed the stresses are jointly fatal (2× costs +
+1-day lag → holdout Sharpe 0.13) and ~83% of PnL sits on the borrow-dependent
+YCA leg. The paper track's primary purpose is therefore to measure REAL fill
+quality and borrow, which decide whether the edge exists at all. This document
+specifies a
 **paper-trading process** whose purpose is to (a) accumulate true point-in-time
 out-of-sample evidence, (b) measure real fill quality and borrow, before any
 go decision is revisited. No broker connection; no real orders.
@@ -42,7 +46,8 @@ Frozen parameters (modal walk-forward selection; pre-registered grid):
 
 ### Sizing & risk
 
-- Paper capital: US$500k (within measured capacity plateau).
+- Paper capital: US$300k (within red-team-revised capacity of ~$0.3–0.6M;
+  the YCA leg's 5% ADV participation is ≈$289k/day).
 - Max gross exposure 100% (0.5/0.5). No leverage. No pyramiding.
 - Kill switches (stop paper test, investigate):
   - strategy drawdown > 12% (2.4× worst backtest DD);

@@ -16,10 +16,12 @@ DECISIONS = {
     "B_trend": ("REJECT", "2 trades in dev sample (parameter island); 11% positive WF folds"),
     "F_crossline": ("REJECT", "net WF Sharpe -2.36: spread never exceeds round-trip costs; "
                                "NOT arbitrage"),
-    "G_sput_yca": ("CONDITIONAL NO-GO", "passes all holdout gates (1.14 net; 0.63 at 2x costs; "
-                    "lag1 54% retention) and plateau/LOO/concentration tests, but fails the "
-                    "pre-registered pooled deflated-Sharpe gate (0.08); capacity <= ~$5M; "
-                    "short-leg borrow unverified. Verdict: promising - paper-trade, do not deploy"),
+    "G_sput_yca": ("CONDITIONAL NO-GO", "passes each individual holdout gate (1.14 net; 0.63 at "
+                    "2x costs; lag1 54% retention) and plateau/LOO/concentration tests, BUT: "
+                    "joint 2x-cost+1d-lag stress -> holdout 0.13 (red team); fails pooled "
+                    "deflated-Sharpe gate (0.08/648 trials); holdout PSR p~0.10 unadjusted, "
+                    "~0.3 selection-adjusted; realistic capacity ~$0.3-0.6M; 83% of PnL on "
+                    "borrow-unverified YCA leg. Verdict: paper-trade only, do not deploy"),
     "H_hedged_resid": ("REJECT", "neighbor Sharpe -0.40 (no parameter plateau); 40% positive folds"),
     "H_unhedged_resid": ("REJECT", "WF Sharpe 0.22 below screen"),
 }

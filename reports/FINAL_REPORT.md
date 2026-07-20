@@ -7,17 +7,30 @@ final ~25% untouched holdout). All results **net of costs** unless stated.
 
 **The null hypothesis largely survives.** Of seven pre-registered strategy
 families tested end-to-end, six are rejected. One — a SPUT-vs-Yellow-Cake
-relative-value pair (G) — passes every economic, robustness and untouched-
-holdout gate (holdout net Sharpe 1.14; 0.63 at doubled costs; 54% retention
-under one-day execution lag; no parameter island; no outlier dependence), but
-**fails the pre-registered pooled deflated-Sharpe criterion (0.08 vs 0.90
-required)** and has realistic capacity of only ~$1–5M, bounded by Yellow Cake's
-LSE liquidity. The registered verdict is therefore:
+relative-value pair (G) — passes each individual economic, robustness and
+untouched-holdout gate (walk-forward OOS net Sharpe 1.54; holdout 1.14; 0.63
+at doubled costs; 54% retention under one-day execution lag; no parameter
+island; no outlier dependence), but three findings, two surfaced by the
+independent red team, are collectively decisive:
 
-> **CONDITIONAL NO-GO — "promising but requires better data and a live paper
-> track."** Paper-trade per `docs/LIVE_SPEC.md`; do not deploy capital. Five
-> years of post-conversion history is simply too short to certify a Sharpe of
-> this size against the multiple-testing burden this project itself created.
+1. **Individually-passed stresses are jointly fatal**: 2× costs AND +1-day lag
+   together collapse the holdout Sharpe to **0.13** (0.27 dev; ~0.08 adding a
+   borrow shock). The strategy turns over ~44× per year one-way (~645 bps/yr
+   base cost drag), so it lives or dies on fill quality.
+2. It **fails the pre-registered pooled deflated-Sharpe gate** (0.08 vs 0.90
+   required across all 648 logged trials), and the holdout alone is not
+   statistically distinguishable from zero (PSR 0.90, p≈0.10 before adjusting
+   for three families reaching the holdout; ~0.3 after).
+3. **Realistic capacity is ~$0.3–0.6M**, bounded by Yellow Cake's LSE
+   liquidity once impact is charged on full intended size rather than only
+   the participation-capped portion.
+
+> **Verdict: CONDITIONAL NO-GO — "promising but requires better data and a
+> live paper track."** Paper-trade per `docs/LIVE_SPEC.md`; do not deploy
+> capital. Five years of post-conversion history is too short to certify an
+> edge of this size against the multiple-testing burden this project itself
+> created, and the economics only work at personal-account scale with
+> near-perfect execution.
 
 The headline negative results are as valuable: the persistent SPUT discount is
 **not arbitrage and not reliably tradeable on its own**, and the U.UN/U.U
@@ -94,7 +107,7 @@ borrow + square-root impact.
 | I cross-vehicle factor | discount reversion generalizes | +0.42 PHYS, +0.40 YCA, −0.22 PSLV, −0.09 CEF | — | NOT robust — factor does not generalize; treated as evidence against A |
 | J options | — | — | — | DEFERRED — no data (MX options listed 2025-09) |
 
-Failed specifications were preserved, not tuned: 432 grid-point evaluations
+Failed specifications were preserved, not tuned: 648 grid-point evaluations
 logged (reports/tables/trial_count.json, combo_sharpes.json) and used to
 deflate reported Sharpes.
 
@@ -109,21 +122,29 @@ deflate reported Sharpes.
 - Parameter plateau: all ±1-step neighbors ≥ 1.35. Leave-one-year-out ≥ 1.74.
 - Concentration: top-5 trades = 18% of PnL (81 trades); worst single year still
   positive; removing the best 5 trades leaves SR 1.51.
-- **Deflated Sharpe: 0.08 pooled** (all 432 trials, registered accounting) vs
+- **Deflated Sharpe: 0.08 pooled** (all 648 trials, registered accounting) vs
   0.99 family-level. The registered figure governs. With ~5y of data and a
   cross-family trial variance inflated by intentionally-tested bad families,
   the pooled DSR is extremely conservative — but relaxing it post hoc is
   exactly the failure mode this project was designed to prevent.
+- **Joint stresses (red team):** 2× costs + 1-day lag together → holdout 0.13,
+  dev 0.27; adding a 3× borrow shock → ~0.08. Stresses were originally
+  reported one-at-a-time; the joint case is the realistic retail case.
+- **Holdout significance (red team):** PSR on the 321-day holdout = 0.90
+  (p ≈ 0.10); three families reached the holdout, so the selection-adjusted
+  p is ~0.3. The holdout is supportive, not conclusive.
 
 ## 8. Capacity and impact
 
-Binding constraint: YCA.L median ADV ≈ $5.8M. At $1M capital, 17% of trade
-days exceed a 5% participation cap; at $25M, liquidating the YCA leg takes
-~43 trading days. Sharpe net of square-root impact: 1.65 → 1.52 from $100k
-to $5M (full-sample basis), but the participation-violation count makes
-anything beyond low-single-digit $M unrealistic. The strategy is
-**capacity-constrained to roughly $1–5M** — viable for personal/prop capital,
-irrelevant institutionally.
+Binding constraint: YCA.L median ADV ≈ $5.8M → 5% participation ≈ $289k/day
+per leg. At $1M capital, 17% of trade days exceed the cap; at $5M, fills take
+~8.7 days against a ~5-day median holding period — the trade is over before
+the position is on. The original impact model charged impact only on the
+capped quantity while crediting full P&L (which is why modeled Sharpe
+artificially "flattens" at 1.52 above $5M) and used an impact coefficient
+5–10× below literature estimates; the red team's corrected reading puts
+**realistic capacity at ~$0.3–0.6M**. Viable only for personal capital;
+irrelevant at fund scale.
 
 ## 9. Explainability (why might G persist?)
 
@@ -139,7 +160,29 @@ premia decouple structurally (2021Q3-style), or borrow becomes unavailable.
 
 ## 10. Red-team findings
 
-See docs/RED_TEAM.md. {{RED_TEAM_SUMMARY}}
+Full review: docs/RED_TEAM.md (independent adversarial pass; all numbers
+independently recomputed — baseline reproduced exactly).
+
+**Attacks that failed** (conclusions that stand): no lookahead across the
+TSX/LSE calendar mismatch (0 of 215 YCA fills use non-prior information);
+stale-price forward-fill does not drive the edge (contemporaneous-only signal:
+dev 1.86 / holdout 1.16 vs 1.89 / 1.14); no GBp/GBP 100× data corruption; no
+splits/dividends missed; not uranium beta (static long-SPUT/short-YCA Sharpe
+0.07); an FX-consistency wart in the traded CAD leg is real but *adverse* —
+fixing it raises Sharpe to 1.97/1.16, so reported numbers are conservative.
+
+**Findings accepted and applied** (sections 1, 7, 8): joint-stress collapse;
+holdout statistical thinness; capacity revised down to ~$0.3–0.6M; headline
+restated as WF-OOS 1.54 rather than in-sample-refit 1.89; trial count
+corrected to 648; ~83% of G's PnL comes from the YCA (borrow-dependent) leg —
+reinforcing the borrow-verification requirement in LIVE_SPEC.
+
+**One factual correction to the review:** it states the project has no git
+history; the repository has had version control with staged commits throughout.
+The substantive point behind it — that pre-registration and holdout evaluation
+occurred within one working session by one author, so "frozen before results"
+rests on same-day commit timestamps rather than independent attestation — is
+accepted and disclosed here.
 
 ## 11. What additional data would raise confidence
 

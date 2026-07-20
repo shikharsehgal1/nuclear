@@ -39,8 +39,21 @@
    family D re-specified accordingly (nowcast uses only day-t observables).
 10. **Holdout evaluated once** (2026-07-20) for the three families passing dev
     gates. Results in reports/tables/holdout_results.csv; script refuses reruns.
-11. **DSR interpretation:** pre-registered trial accounting (all 432 grid points
+11. **DSR interpretation:** pre-registered trial accounting (all 648 grid points
     pooled) yields DSR 0.08 for G_sput_yca; family-level DSR 0.99 reported as a
     labeled secondary. The registered (pooled) figure governs the go/no-go.
 12. **Verdict recorded:** G_sput_yca = CONDITIONAL NO-GO (paper-trade spec in
     LIVE_SPEC.md); all other families rejected with reasons in the leaderboard.
+13. **Red-team response (same day):** accepted and applied — joint-stress
+    reporting (2×costs+lag1 → holdout 0.13), capacity revised to ~$0.3–0.6M
+    (impact was charged only on participation-capped size while crediting full
+    PnL; coefficient 0.1 below literature), holdout significance disclosure
+    (PSR p≈0.10 unadjusted / ~0.3 selection-adjusted for 3 families), headline
+    restated as WF-OOS 1.54, trial count corrected 432→648. Declined/corrected:
+    the "no git history" claim is factually wrong (commits exist throughout),
+    though the underlying single-session pre-registration weakness is disclosed
+    in FINAL_REPORT §10. Known-and-accepted conservative bias left in place:
+    G's CAD-leg FX inconsistency (fixing it raises Sharpe; kept as-is).
+    Minor items logged, not blocking: financing_spread configured but never
+    charged (shorts' borrow IS charged); YCA parquet includes a live partial
+    bar for 2026-07-20 (excluded from analysis, which ends 2026-07-17).
