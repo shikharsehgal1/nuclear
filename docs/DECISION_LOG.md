@@ -67,3 +67,11 @@
     overhang is resolved; open risks now: statistical thinness + YCA borrow
     availability. FINAL_REPORT section 10b added. Raw captures in
     data/raw/live_quotes/ (gitignored by raw-data policy, on disk).
+15. **Micro-capital analysis (couple-$k request):** impact/capacity/borrow-
+    availability constraints vanish at $2-10k; binding cost becomes fixed
+    minimum commissions (~87 orders/yr x ~$1.90 + FX ≈ $185/yr). Historical
+    net at measured costs: $2k → ~14%/yr (~$280), $5k → ~19.5% (~$977),
+    $10k → ~21% (~$2,140). Practical notes: margin account required for the
+    short leg (IBKR $2k minimum equity — right at the boundary); odd-lot
+    fills on TSX at ~39 shares; all-USD variant possible via SRUUF/YLLXF to
+    avoid FX conversions. Statistical caveats unchanged.
