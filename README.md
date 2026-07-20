@@ -1,4 +1,4 @@
-# nuclear
+# Nuclear SPUT/YCA Trading
 
 **TL;DR:** two publicly traded vehicles hold the exact same thing — physical uranium sitting in warehouses. SPUT (`U.UN`, toronto) and Yellow Cake (`YCA.L`, london). because neither one lets you redeem shares for the actual uranium, their prices drift away from the metal *and from each other* based on pure investor flows. the trade: take the log ratio of their USD prices, z-score it over 120 days, and when it stretches past ±1 standard deviation, buy the cheap one and short the rich one, half your money each side. exit when the gap closes halfway (z back inside ±0.5) or after 10 days, whichever comes first. thats it — no forecasting, youre just betting that two containers of the same rock dont stay mispriced against each other for long. backtests at ~23%/yr net of real measured costs, sharpe ~1.4 over 8 years including a pre-2021 period the rule was never fitted on. catch: it caps out around $500k (yellow cake is illiquid), needs a margin account to short, and the edge gets thin if your execution is sloppy. everything below is the receipts.
 
