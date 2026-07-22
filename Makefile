@@ -31,3 +31,6 @@ test:
 
 lint:
 	uv run ruff check src tests scripts
+
+paper:
+	uv run python scripts/paper_trade.py
