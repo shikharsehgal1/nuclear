@@ -1,7 +1,9 @@
 """Pull daily bars for the overnight universe (+ hourly for exit-timing checks)."""
 
-from sput_research.overnight.data import CFG, fetch_daily, fetch_hourly, fetch_vix
+from sput_research.overnight.data import CFG, fetch_daily, fetch_hourly, fetch_minute, fetch_vix
 
+MINUTE = ["URNM", "URA", "NLR", "SILJ", "SIL", "GDXJ", "COPX", "REMX", "XME", "FCG", "PALL", "BNO",
+          "GDX", "GLD", "SPY"]
 HOURLY = ["URNM", "URA", "COPX", "SIL", "REMX", "GDXJ", "SILJ", "GLD", "SLV", "USO", "SPY"]
 
 if __name__ == "__main__":
@@ -10,4 +12,5 @@ if __name__ == "__main__":
     fetch_daily(force=force)
     fetch_hourly(HOURLY, force=force)
     fetch_vix(force=force)
+    fetch_minute(MINUTE, force=force)
     print("done; end =", CFG["data"]["end"])

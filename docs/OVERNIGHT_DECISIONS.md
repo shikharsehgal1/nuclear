@@ -51,3 +51,20 @@
 14. **Overlays that helped in all three periods:** 15/VIX sizing (max 1x) and a
     beta-neutral long-SPY hold. Both were found after OOS was known, so they're
     recommended for paper trading, not claimed as validated.
+15. **MOO/MOC check** on 20 days of Yahoo 1-minute bars (2026-09-17..10-14): the daily
+    open equals the first print exactly, and the first-minute move is 14–28 bp in the
+    miner ETFs, so auction execution is required. Closing-auction volume could not be
+    measured (Yahoo 1-minute volume doesn't reconcile with daily volume), so the 4%-of-ADV
+    auction assumption stays unverified.
+16. **Realistic post-cost run** (`scripts/overnight_postcost.py`): per-share IBKR-style
+    fees with a $0.35 minimum, SEC fee on sales and short sales, 1 bp auction slippage,
+    optional sqrt impact, at $25k/$100k/$300k. Result: the pre-2024 edge only survives
+    without impact (fees only); 2024–26 survives up to ~$100k (~$300k with ADV ≥ $20M).
+    README headline changed accordingly: the flat-1.5 bp numbers are no longer the
+    headline.
+17. **Auction prices, second source.** Nasdaq.com official daily open/close
+    (`scripts/overnight_auction_prices.py`) matches Yahoo to the cent on 96–100% of days
+    for 13 of 15 held ETFs since Oct 2016, with 95% of the remaining gaps under 1 bp.
+    Exceptions: NLR closes pre-2024 (64–73% identical) and GDX opens 2024–26 (87%). True
+    auction-flagged prints need tick data with trade conditions (not available free
+    without an account); flagged as a remaining gap.

@@ -2,26 +2,30 @@
 
 > the original SPUT/YCA pair trade writeup now lives in [SPUT_YCA.md](SPUT_YCA.md).
 
-**TL;DR:** niche commodity ETFs (uranium, silver/gold juniors, copper, rare earths) make basically all their money **overnight** and lose money **during the session**. URNM since 2020: +74%/yr close→open, −43%/yr open→close. the trade: every month pick the 5 ETFs where that gap has been strongest over the last 24 months. each day, buy the ones that closed up in the **closing auction**, sell in the **next opening auction**, and short them open→close with the same money. no waiting for a signal, the capital works every day. net Sharpe **1.0 / 1.7 / 2.1** across 2011–15 (never looked at), 2016–23 (where params were picked) and 2024–26 (out of sample). green in all 17 calendar years. catch: it only works through the auctions (cross the spread and it's dead), it tops out around **$100–300k**, the short leg needs a margin account with $25k+ (pattern day trader rule), and in 2024–26 uranium carried most of it.
+**TL;DR:** niche commodity ETFs (uranium, silver/gold juniors, copper, rare earths) make basically all their money **overnight** and lose money **during the session**. URNM since 2020: +74%/yr close→open, −43%/yr open→close. the trade: every month pick the 5 ETFs where that gap has been strongest over the last 24 months. buy the ones that closed up in the **closing auction (MOC)**, sell in the **next opening auction (MOO)**, and short them open→close with the same money. at a flat 1.5 bp per trade it's Sharpe **1.0 / 1.7 / 2.1** across 2011–15 (never looked at), 2016–23 (where params were picked) and 2024–26 (out of sample). **after realistic costs** (per-share fees, SEC fee, auction slippage, market impact) most of the pre-2020 edge goes away, because the ETFs it held back then traded only ~$5M a day. in 2024–26, with those ETFs now 10–20× bigger, it still works: OOS Sharpe ~**1.2–2.1** for a $25k–$100k account. it needs auction orders, a margin account, and in 2024–26 uranium carried most of it.
 
 ## the best strats (short version)
 
-| rank | strategy | what you do | net Sharpe 2011–15 / 2016–23 / 2024–26 | use it when |
-|---|---|---|---|---|
-| **1** | **up-day long/short** | buy the up-closers at the close auction, sell at the open auction, short all 5 open→close | **1.04 / 1.71 / 2.12** | default. green 17/17 years, works in bear markets too |
-| 2 | up-day long overnight only | same, without the intraday short | 0.31 / 2.08 / 2.65 | you can't short or you're under $25k. flat in commodity bear markets (2012–14) |
-| 3 | short-only (intraday leg alone) | short the 5 at the open, cover at the close, no overnight long | 0.90 / 0.37 / 0.58 | not on its own. max DD −38%, 13/17 years green. most of the edge is the overnight long |
-| — | everything else | trend, intraday momentum, EIA windows, pairs (USO/BNO, GLD/SLV, PPLT/PALL), roll timing, 5-min lead-lag | — | don't. inconsistent or too small to beat costs |
+net Sharpe for 2011–15 / 2016–23 / 2024–26. "post-cost" = per-share fees + SEC fee + 1 bp auction slippage. "+ impact" adds sqrt market impact against auction volume (details in [post-costs](#moomoc-check-and-everything-post-costs)).
 
-**rules for #1:**
-- auction orders only (MOC in, MOO out). crossing the spread kills it
-- size $25k–$300k. ADV ≥ $20M filter if you want more room
-- margin account + intraday short locates on thin ETFs (URNM, SILJ)
-- 2024–26 was carried by uranium (without it, OOS Sharpe 0.29)
-- optional overlays that helped in every period (post-hoc, see below): size by **15/VIX (max 1x)**, and hold a small **long SPY** sized to the strategy's trailing beta
+| rank | strategy | flat 1.5 bp | post-cost, $25k | 2024–26 + impact, $25k / $100k | use it when |
+|---|---|---|---|---|---|
+| **1** | **up-day long/short + 15/VIX sizing + small long-SPY beta hedge** | 1.18 / 1.88 / 2.36* | **0.58 / 1.41 / 2.21** | **1.70 / 1.24** | default if you can short. only one positive in all 3 periods after costs |
+| **2** | **up-day long overnight + 15/VIX** | — | −0.37 / 1.68 / 2.51 | **2.06 / 1.64** | no shorting, no pattern-day-trader issue, half the trading. loses in commodity bear markets (2011–15) |
+| 3 | up-day long/short (frozen headline, no overlays) | 1.04 / 1.71 / 2.12 | 0.50 / 1.10 / 1.82 | 1.31 / 0.84 | the overlays help after costs, so use #1 instead |
+| 4 | short-only (intraday leg alone) | 0.90 / 0.37 / 0.58 | 0.68 / 0.06 / 0.46 | 0.16 / −0.10 | don't. the edge is the overnight long |
+| — | everything else | — | — | — | trend, intraday momentum, EIA windows, pairs (USO/BNO, GLD/SLV, PPLT/PALL), roll timing, 5-min lead-lag: inconsistent or too small to beat costs |
+
+\* #1 at flat cost uses the beta hedge only, without VIX sizing. VIX sizing and the SPY hedge were found **after** OOS was known, so treat #1 and #2 as "promising, paper trade", not validated.
+
+**rules:**
+- **MOO/MOC orders only.** the price moves 14–28 bp in the first minute after the open in these ETFs, about the whole nightly edge (~17 bp). miss the auction and you're flipping a coin
+- **size $25k–$100k**, up to ~$300k with an ADV ≥ $20M filter (OOS Sharpe 1.0–1.3 there). beyond that impact eats it
+- #1 needs a margin account and intraday short locates (URNM, SILJ)
+- 2024–26 was carried by uranium (without it, OOS Sharpe 0.29 even at flat cost)
 - paper trade first
 
-**risk (up-day LS, net, 2011–2026):** CAGR 47%, vol 26%, Sharpe 1.60, Sortino 2.24, max DD **−27%** (Mar 2020, recovered in 3 months), longest underwater 367 days (2013–14), worst day −22% (Mar 2020), worst month −12%, 70% of months up.
+**risk, #1 post-cost at $25k (2011–2026):** CAGR 27%, vol 19%, Sharpe 1.33, max DD **−25%**, green 13/17 years. 2024–26 alone: 69%/yr.
 
 ---
 
@@ -52,7 +56,7 @@ the top of that chart is all miner/producer equity ETFs: URNM, SILJ, SIL, COPX, 
 
 the ETF picks are walk-forward (month m only sees data before m), so URNM etc. are never hand-picked. full disclosure: this idea came out of a sweep that saw 2024–26 per-ticker numbers, so **2010–15 is the cleanest test**, not 2024–26 (see `docs/OVERNIGHT_DECISIONS.md`).
 
-## results (net, auction costs)
+## results (flat 1.5 bp auction cost, before the realistic post-cost run)
 
 | strategy | 2011–15 pre-sample | 2016–23 discovery | 2024–26 OOS | max DD | years green |
 |---|---|---|---|---|---|
@@ -153,6 +157,38 @@ the strategy still makes money when VIX is high (Sharpe 1.1–1.6 above VIX 25),
 
 shorting a hedge overnight is the wrong way round: it adds to the short beta and pays away SPY/GDX's own overnight drift. what helps is the opposite: a small **long SPY** sized to the trailing beta makes it market-neutral (corr ~0) and lifts Sharpe in every period.
 
+## MOO/MOC check and everything post-costs
+
+**are the open/close prices real auction prints?** checked on the last 20 trading days of 1-minute bars (Sep 17 – Oct 14, 2026) for the 15 ETFs it holds most:
+
+| check | result |
+|---|---|
+| yahoo daily open vs first trade of the day | **identical** (0.0 bp) in all 15. the backtest open *is* the opening print |
+| **second source:** Nasdaq.com official open/close vs yahoo, Oct 2016 – Oct 2026 | identical to the cent on **96–100%** of days for 13 of 15 ETFs, and 95% of the rest are within 1 bp. exceptions: NLR closes before 2024 (64–73% identical, still <1 bp) and GDX opens 2024–26 (87%). so the backtest uses the official opening/closing prints |
+| actual auction trades with condition codes | not in free daily data. needs tick data (Alpaca free account or Databento). caveat: when a thin ETF's auction doesn't trade, the official open falls back to the first trade |
+| price move open → 09:31 | median **14–28 bp** in the miner ETFs (GLD/SPY ~3.5). that's about the whole nightly edge, so **MOO, not "market order right after the open"** |
+| official close vs the 15:59 price | median 2–7 bp |
+| official close vs 15:50 (MOC cutoff) | median 8–21 bp. why the up-day signal has to use the pre-cutoff price (agrees with the close ~95% of days, see above) |
+| per-share fees ($0.005/share) | 0.1–2.3 bp per trade. cheap ETFs cost the most (PALL 2.3, SILJ 1.8, FCG 1.7) |
+| closing auction size | **couldn't measure**: yahoo's 1-min volumes don't reconcile with its daily volume. impact assumes each auction = 4% of daily volume, conservative and unverified |
+
+**post-cost model**, per order: `max($0.35, $0.0035/share) + $0.0015/share` (IBKR Pro tiered + exchange/clearing), SEC fee 0.278 bp on every sale and short sale, 1 bp auction slippage, and optionally sqrt impact `0.1 × σ_daily × sqrt(order / auction volume)`. each leg trades twice a day.
+
+![post-cost](reports/overnight/figures/19_postcost.png)
+
+| strategy (Sharpe pre / disc / OOS) | fees only, $25k | + impact, $25k | + impact, $100k | + impact, ADV≥$20M, $100k | + impact, ADV≥$20M, $300k |
+|---|---|---|---|---|---|
+| #1 up-day LS + 15/VIX + long-SPY hedge | 0.58 / 1.41 / 2.21 | −0.21 / 0.31 / 1.70 | −0.95 / −0.74 / 1.24 | 0.02 / 0.12 / 1.47 | −0.33 / −0.32 / 1.00 |
+| #2 up-day long overnight + 15/VIX | −0.37 / 1.68 / 2.51 | −1.13 / 0.72 / 2.06 | −1.85 / −0.21 / 1.64 | −0.67 / 0.69 / 1.71 | −1.01 / 0.31 / 1.32 |
+| #3 up-day LS (frozen) | 0.50 / 1.10 / 1.82 | −0.27 / 0.13 / 1.31 | −1.01 / −0.82 / 0.84 | −0.10 / −0.09 / 1.07 | −0.47 / −0.55 / 0.59 |
+| up-day long overnight only | −0.10 / 1.66 / 2.43 | −0.84 / 0.80 / 2.00 | −1.56 / −0.05 / 1.57 | −0.39 / 0.60 / 1.64 | −0.75 / 0.20 / 1.23 |
+| #4 short-only | 0.68 / 0.06 / 0.46 | 0.26 / −0.47 / 0.16 | −0.13 / −0.99 / −0.10 | 0.15 / −0.58 / 0.09 | −0.05 / −0.83 / −0.20 |
+
+how to read it:
+- **impact is what kills the old periods**, not fees. the names it held traded a median ~$5M/day in 2016–19 vs ~$80M/day in 2026
+- in **2024–26 everything except short-only survives** up to $100k, and to ~$300k with the ADV floor
+- the impact model is a guess for auction orders. the truth for a $25k account is probably between the "fees only" and "+ impact" columns
+
 ## then i tried to kill it
 
 | up-day LS, Sharpe | pre | disc | OOS |
@@ -180,11 +216,12 @@ what landed:
 
 ## verdict
 
-- **up-day LS is the one.** positive in all three periods, including six years nobody looked at, and in all 17 calendar years. Sharpe ~1.6 over 2011–2026.
-- **it's an execution strategy.** if your broker can't do MOC/MOO on Arca-listed ETFs, don't bother.
-- **practical size: $25k–$300k.** under $25k the intraday short runs into the pattern day trader rule (check your broker, FINRA has been revising it), so run the ON-only version (and accept it can go flat for years like 2012–14). above ~$300k impact eats it.
-- **you need intraday short locates** for SILJ/URNM-type names. no overnight borrow fee because the short is flat by the close, but the locate has to be there.
-- status: paper trade first. the up-day filter was found in 2016–23 and passed both untouched periods, but it's one more degree of freedom.
+- **the effect is real and was there all along**: positive in all three periods, ranked picks beat 100% of random picks, and it holds across a 90-cell lookback × top-K grid.
+- **for most of history it wasn't tradeable at size.** before ~2020 the ETFs it picked traded ~$5M/day. with fees alone it still works at $25k (#1: 0.58 / 1.41), but add modelled impact and the pre-2024 edge is gone even at that size.
+- **today it is.** those ETFs now trade $20–120M/day. 2024–26 post-cost OOS Sharpe ~1.2–2.1 at $25k–$100k.
+- **it's an execution strategy.** MOO/MOC or nothing.
+- **pick #1** (long/short + 15/VIX + long-SPY hedge) if you can short. **pick #2** (long overnight + 15/VIX) if you can't or you're under $25k (pattern day trader rule; check your broker, FINRA has been revising it).
+- **status: paper trade.** the overlays were found after OOS was known, and 2024–26 leans on uranium.
 
 ## repro
 

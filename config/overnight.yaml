@@ -44,6 +44,11 @@ costs:  # per side, bps
   impact_coefficient: 0.1     # sqrt impact: coeff * sigma_daily * sqrt(Q / auction_volume)
   auction_share_of_adv: 0.08  # open+close auctions ~ 8% of ETF ADV combined (conservative)
   max_auction_participation: 0.10
+  # "realistic" post-cost model (scripts/overnight_postcost.py), per order:
+  per_share_commission: 0.0035   # IBKR Pro tiered
+  per_share_fees: 0.0015         # exchange auction + clearing + pass-through, conservative
+  min_commission_usd: 0.35
+  sec_fee_bps_on_sells: 0.278    # sells and short sales
 
 # FROZEN 2026-10-15 after the discovery-only grid + improvement tests (docs/OVERNIGHT_DECISIONS.md).
 # Pre-sample and OOS were not run before this block was written.

@@ -49,6 +49,30 @@ def fetch_hourly(tickers: list[str], force: bool = False) -> None:
         d[["Open", "High", "Low", "Close", "Volume"]].to_parquet(f)
 
 
+def fetch_minute(tickers: list[str], force: bool = False) -> None:
+    """Last ~28 days of 1-minute bars (Yahoo serves 1m only for 30 days, 8 days per call)."""
+    import yfinance as yf
+    end = pd.Timestamp(CFG["data"]["end"])
+    for t in tickers:
+        f = RAW_DIR / f"{t}_1m.parquet"
+        if f.exists() and not force:
+            continue
+        parts = []
+        for k in range(4):
+            e = end - pd.Timedelta(days=7 * k)
+            d = yf.Ticker(t).history(start=e - pd.Timedelta(days=7), end=e, interval="1m", auto_adjust=False)
+            if len(d):
+                parts.append(d)
+        d = pd.concat(parts).sort_index()
+        d = d[~d.index.duplicated()]
+        d.index = d.index.tz_convert("America/New_York").tz_localize(None)
+        d[["Open", "High", "Low", "Close", "Volume"]].to_parquet(f)
+
+
+def load_minute(t: str) -> pd.DataFrame:
+    return pd.read_parquet(RAW_DIR / f"{t}_1m.parquet")
+
+
 def fetch_vix(force: bool = False) -> None:
     import yfinance as yf
     f = RAW_DIR / "VIX_1d.parquet"
