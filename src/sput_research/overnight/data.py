@@ -49,6 +49,20 @@ def fetch_hourly(tickers: list[str], force: bool = False) -> None:
         d[["Open", "High", "Low", "Close", "Volume"]].to_parquet(f)
 
 
+def fetch_vix(force: bool = False) -> None:
+    import yfinance as yf
+    f = RAW_DIR / "VIX_1d.parquet"
+    if f.exists() and not force:
+        return
+    d = yf.Ticker("^VIX").history(start=CFG["data"]["start"], end=CFG["data"]["end"], auto_adjust=False)
+    d.index = d.index.tz_localize(None).normalize()
+    d[["Close"]].to_parquet(f)
+
+
+def load_vix() -> pd.Series:
+    return pd.read_parquet(RAW_DIR / "VIX_1d.parquet")["Close"].rename("VIX")
+
+
 def load_daily(t: str) -> pd.DataFrame:
     return pd.read_parquet(RAW_DIR / f"{t}_1d.parquet")
 

@@ -10,6 +10,7 @@
 |---|---|---|---|---|
 | **1** | **up-day long/short** | buy the up-closers at the close auction, sell at the open auction, short all 5 open→close | **1.04 / 1.71 / 2.12** | default. green 17/17 years, works in bear markets too |
 | 2 | up-day long overnight only | same, without the intraday short | 0.31 / 2.08 / 2.65 | you can't short or you're under $25k. flat in commodity bear markets (2012–14) |
+| 3 | short-only (intraday leg alone) | short the 5 at the open, cover at the close, no overnight long | 0.90 / 0.37 / 0.58 | not on its own. max DD −38%, 13/17 years green. most of the edge is the overnight long |
 | — | everything else | trend, intraday momentum, EIA windows, pairs (USO/BNO, GLD/SLV, PPLT/PALL), roll timing, 5-min lead-lag | — | don't. inconsistent or too small to beat costs |
 
 **rules for #1:**
@@ -17,7 +18,10 @@
 - size $25k–$300k. ADV ≥ $20M filter if you want more room
 - margin account + intraday short locates on thin ETFs (URNM, SILJ)
 - 2024–26 was carried by uranium (without it, OOS Sharpe 0.29)
+- optional overlays that helped in every period (post-hoc, see below): size by **15/VIX (max 1x)**, and hold a small **long SPY** sized to the strategy's trailing beta
 - paper trade first
+
+**risk (up-day LS, net, 2011–2026):** CAGR 47%, vol 26%, Sharpe 1.60, Sortino 2.24, max DD **−27%** (Mar 2020, recovered in 3 months), longest underwater 367 days (2013–14), worst day −22% (Mar 2020), worst month −12%, 70% of months up.
 
 ---
 
@@ -89,6 +93,65 @@ no, and this is the big difference from SPUT/YCA, which only trades when the z-s
 ![exit timing](reports/overnight/figures/07_exit_timing.png)
 
 the up-day signal uses the close in the backtest. live, you'd use the price a few minutes before the MOC cutoff. checked on KIBOT 5-min data for 2016–23: the 15:45 sign agrees with the close sign on ~95% of days, and the after-up/after-down gap is still there.
+
+## variations, monte carlo, risk overlays, hedging
+
+all of this was run **after** the rule was frozen, so it's sensitivity analysis. nothing here re-picks the rule on 2024–26.
+
+**ranking window × number of names.** 90 combos, from 1 month (~21 days) to 48 months and from top 1 to top 15:
+
+![lookback x topk](reports/overnight/figures/12_lookback_topk.png)
+
+- every combo is positive in 2016–23 and 2024–26, and 89/90 in the pre-sample. it's a plateau, not a lucky cell
+- 6–18 months with 2–6 names is the most balanced. 24m/top 5 is fine
+- 1–3 month windows (~60 days) work early but are weaker OOS (~0.6–1.6). 36–48 months are weak early but best OOS (uranium stayed on top for years)
+- 10–15 names dilutes it. blending the 6+12+24 month rankings (~8 names) is also worse: 0.86 / 1.94 / 1.84
+- other ranking scores (raw mean gap, overnight-only Sharpe) land in the same place, nothing better
+
+![score variants](reports/overnight/figures/13_score_variants.png)
+
+**monte carlo / randomized sampling:**
+
+| test | result |
+|---|---|
+| pick the 5 ETFs **at random** each month (500 runs, same mechanics) | the ranked version beats **100%** of them in all 3 periods. random median Sharpe −0.20 / 0.57 / 0.13. **the ranking is the edge**, the close→open mechanics alone aren't |
+| drop a **random 30% of the universe** (300 runs) | positive in 97% / 100% / 98% of runs. median 0.74 / 1.43 / 1.68. runs without URA+URNM: OOS median 1.05 |
+| **random start dates** (1,000 windows each) | 92% of 1-year windows and 97% of 2-year windows made money |
+| **block bootstrap** of daily returns (5,000 one-year paths) | 1-year Sharpe 5–95%: [0.1, 3.1]. P(losing year) 5%. P(1-year drawdown worse than −20%) 17%, worse than −30%: 1% |
+
+![random selection](reports/overnight/figures/14_random_selection_mc.png)
+![randomized sampling](reports/overnight/figures/18_randomized_sampling.png)
+![bootstrap](reports/overnight/figures/15_bootstrap_mc.png)
+
+**volatility.** usually 15–30% a year. spikes: 2020 (46%, ~77% rolling at the peak), 2022 (33%), 2025 (35%).
+
+![vol history](reports/overnight/figures/16_vol_history.png)
+
+**VIX sizing** (size = 15/VIX, using the VIX close from 2 days before so it's known before the MOC):
+
+| sizing | Sharpe pre / disc / OOS | max DD full | avg size |
+|---|---|---|---|
+| as frozen (1x) | 1.04 / 1.71 / 2.12 | −27% | 1.00 |
+| **15/VIX, max 1x** | **1.05 / 1.95 / 2.38** | **−18%** | 0.85 |
+| 15/VIX, max 2x | 1.07 / 1.97 / 2.40 | −21% | 0.91 |
+| half size when VIX > 25 | 0.98 / 1.86 / 2.26 | −20% | 0.94 |
+| vol target 20% (de-risk only) | 0.97 / 1.86 / 2.29 | −20% | — |
+
+the strategy still makes money when VIX is high (Sharpe 1.1–1.6 above VIX 25), so VIX sizing doesn't dodge losing regimes. it just cuts the size of the gaps, like March 2020. 15/VIX capped at 1x is the cleanest: it didn't hurt any period.
+
+![vix sizing](reports/overnight/figures/17_vix_sizing.png)
+
+**hedging / beta.** up-day LS is already **short** the market: beta about −0.25 to −0.37 to SPY and about −0.2 to GDX, because the intraday short leg dominates.
+
+| hedge | Sharpe pre / disc / OOS | max DD full | corr to SPY |
+|---|---|---|---|
+| none | 1.04 / 1.71 / 2.12 | −27% | −0.16 |
+| short SPY overnight (beta-sized) | 0.66 / 1.36 / 1.71 | −34% | −0.33 |
+| short GDX overnight (beta-sized) | 0.70 / 1.30 / 1.83 | −29% | −0.23 |
+| **beta-neutral: hold long SPY ≈ −beta (avg 0.35x)** | **1.18 / 1.88 / 2.36** | −29% | **0.05** |
+| beta-neutral: hold long GDX | 0.95 / 1.91 / 2.60 | −26% | −0.09 |
+
+shorting a hedge overnight is the wrong way round: it adds to the short beta and pays away SPY/GDX's own overnight drift. what helps is the opposite: a small **long SPY** sized to the trailing beta makes it market-neutral (corr ~0) and lifts Sharpe in every period.
 
 ## then i tried to kill it
 

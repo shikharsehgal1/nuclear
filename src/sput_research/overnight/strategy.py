@@ -24,29 +24,50 @@ def month_starts(idx: pd.DatetimeIndex) -> pd.DatetimeIndex:
     return pd.DatetimeIndex(s.groupby([idx.year, idx.month]).first().values)
 
 
-def select(P: dict, lookback_m: int, top_k: int, universe: list[str] | None = None,
-           min_adv: float | None = None) -> pd.DataFrame:
-    """Daily 0/1 membership frame. Row for date t depends only on data < month start of t."""
+SCORES = ("sharpe_ls", "mean_ls", "sharpe_on")
+
+
+def month_scores(P: dict, lookback_m: int, score: str = "sharpe_ls", universe: list[str] | None = None,
+                 min_adv: float | None = None) -> dict[pd.Timestamp, pd.Series]:
+    """Ranking score of every eligible ETF at each month start, using only data before it.
+
+    sharpe_ls: Sharpe of (overnight - intraday)   [frozen default]
+    mean_ls:   mean of (overnight - intraday)
+    sharpe_on: Sharpe of overnight alone"""
     uni = [t for t in (universe or tradeable_universe()) if t in P["on"]]
-    ls = (P["on"][uni] - P["id"][uni])
+    x = P["on"][uni] if score == "sharpe_on" else (P["on"][uni] - P["id"][uni])
     adv = P["dollar_vol"][uni].rolling(63, min_periods=40).median()
-    idx = P["on"].index
-    member = pd.DataFrame(0.0, index=idx, columns=uni)
-    starts = month_starts(idx)
     min_obs = int(0.8 * lookback_m * 21)
-    for i, m in enumerate(starts):
-        hist = ls[(ls.index < m) & (ls.index >= m - pd.DateOffset(months=lookback_m))]
-        n = hist.count()
-        sr = hist.mean() / hist.std() * np.sqrt(ANN)
+    out = {}
+    for m in month_starts(P["on"].index):
+        hist = x[(x.index < m) & (x.index >= m - pd.DateOffset(months=lookback_m))]
         prev = adv[adv.index < m]
         if prev.empty:
             continue
+        sc = hist.mean() if score == "mean_ls" else hist.mean() / hist.std() * np.sqrt(ANN)
         liquid = prev.iloc[-1] >= (min_adv or CFG["data"]["min_dollar_adv"])
-        ok = sr[(n >= min_obs) & liquid & (sr > 0)].sort_values(ascending=False)
-        picks = ok.index[:top_k]
-        end = starts[i + 1] if i + 1 < len(starts) else idx[-1] + pd.Timedelta(days=1)
-        member.loc[(idx >= m) & (idx < end), picks] = 1.0
+        out[m] = sc[(hist.count() >= min_obs) & liquid].dropna()
+    return out
+
+
+def members_from_scores(P: dict, scores: dict, top_k: int) -> pd.DataFrame:
+    """Top-K positive scores each month -> daily 0/1 membership."""
+    idx = P["on"].index
+    cols = sorted({c for s in scores.values() for c in s.index}) or list(P["on"].columns[:1])
+    member = pd.DataFrame(0.0, index=idx, columns=cols)
+    month_of = idx.to_period("M")
+    for m, sc in scores.items():
+        picks = sc[sc > 0].sort_values(ascending=False).index[:top_k]
+        member.loc[month_of == m.to_period("M"), picks] = 1.0
     return member
+
+
+def select(P: dict, lookback_m: int, top_k: int, universe: list[str] | None = None,
+           min_adv: float | None = None, score: str = "sharpe_ls") -> pd.DataFrame:
+    """Daily 0/1 membership frame. Row for date t depends only on data < month start of t."""
+    uni = [t for t in (universe or tradeable_universe()) if t in P["on"]]
+    m = members_from_scores(P, month_scores(P, lookback_m, score, uni, min_adv), top_k)
+    return m.reindex(columns=uni, fill_value=0.0)
 
 
 def weights(P: dict, member: pd.DataFrame) -> pd.DataFrame:

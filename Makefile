@@ -39,3 +39,4 @@ overnight:
 	uv run python scripts/overnight_ingest.py
 	uv run pytest -q tests/test_overnight.py
 	uv run python scripts/overnight_research.py
+	uv run python scripts/overnight_sensitivity.py

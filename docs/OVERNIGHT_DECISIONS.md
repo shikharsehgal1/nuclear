@@ -41,3 +41,13 @@
     exit-timing check (2023-11 on, overlaps OOS). Neither changed the frozen rule.
 12. **Trial count for DSR:** 200 (36 grid runs = 9 cells × ON/LS × 2 cost models, 8
     improvement tests, ~150 exploratory configs in the original sweep), rounded up.
+13. **Post-freeze sensitivity** (`scripts/overnight_sensitivity.py`), requested after
+    publication, none of it changes the frozen rule: lookback 1–48m × top-K 1–15 grid,
+    ranking-score variants, lookback blending, random-selection MC (500), random 70%
+    universe MC (300), random 1y/2y windows (1,000 each), block bootstrap (5,000),
+    vol history + 20% vol target, VIX sizing (15/VIX, VIX known 2 days before), SPY/GDX
+    hedges. Selection refactored into `month_scores` + `members_from_scores`. Frozen
+    outputs verified identical after the refactor.
+14. **Overlays that helped in all three periods:** 15/VIX sizing (max 1x) and a
+    beta-neutral long-SPY hold. Both were found after OOS was known, so they're
+    recommended for paper trading, not claimed as validated.
