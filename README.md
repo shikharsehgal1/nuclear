@@ -4,6 +4,21 @@
 
 **TL;DR:** niche commodity ETFs (uranium, silver/gold juniors, copper, rare earths) make basically all their money **overnight** and lose money **during the session**. URNM since 2020: +74%/yr close→open, −43%/yr open→close. the trade: every month pick the 5 ETFs where that gap has been strongest over the last 24 months. each day, buy the ones that closed up in the **closing auction**, sell in the **next opening auction**, and short them open→close with the same money. no waiting for a signal, the capital works every day. net Sharpe **1.0 / 1.7 / 2.1** across 2011–15 (never looked at), 2016–23 (where params were picked) and 2024–26 (out of sample). green in all 17 calendar years. catch: it only works through the auctions (cross the spread and it's dead), it tops out around **$100–300k**, the short leg needs a margin account with $25k+ (pattern day trader rule), and in 2024–26 uranium carried most of it.
 
+## the best strats (short version)
+
+| rank | strategy | what you do | net Sharpe 2011–15 / 2016–23 / 2024–26 | use it when |
+|---|---|---|---|---|
+| **1** | **up-day long/short** | buy the up-closers at the close auction, sell at the open auction, short all 5 open→close | **1.04 / 1.71 / 2.12** | default. green 17/17 years, works in bear markets too |
+| 2 | up-day long overnight only | same, without the intraday short | 0.31 / 2.08 / 2.65 | you can't short or you're under $25k. flat in commodity bear markets (2012–14) |
+| — | everything else | trend, intraday momentum, EIA windows, pairs (USO/BNO, GLD/SLV, PPLT/PALL), roll timing, 5-min lead-lag | — | don't. inconsistent or too small to beat costs |
+
+**rules for #1:**
+- auction orders only (MOC in, MOO out). crossing the spread kills it
+- size $25k–$300k. ADV ≥ $20M filter if you want more room
+- margin account + intraday short locates on thin ETFs (URNM, SILJ)
+- 2024–26 was carried by uranium (without it, OOS Sharpe 0.29)
+- paper trade first
+
 ---
 
 ## the effect
