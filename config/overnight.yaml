@@ -19,6 +19,9 @@ universe:
                         DBO, CORN, WEAT, SOYB, CANE]
   equities_miners_producers: [GDX, GDXJ, SIL, SILJ, COPX, URA, URNM, NLR, REMX, LIT, XME, PICK,
                               XOP, OIH, WOOD, MOO, FCG]
+# Added 2026-10-15 AFTER the main study, as an out-of-universe test (never used for any choice).
+universe_extension: [URNJ, NUKZ, COPJ, SETM, RING, GOAU, SGDM, SGDJ, SLVP, SLX, PSLV, PHYS, SPPP, CEF,
+                     XLE, XES, IEO, PXJ, GSG, PDBC, KRBN, BATT, CUT, GNR, HAP]
 controls: [SPY, IWM, TLT]     # reported, never traded
 
 strategy:

@@ -68,3 +68,8 @@
     Exceptions: NLR closes pre-2024 (64–73% identical) and GDX opens 2024–26 (87%). True
     auction-flagged prints need tick data with trade conditions (not available free
     without an account); flagged as a remaining gap.
+18. **Out-of-universe test** (`scripts/overnight_universe_ext.py`, config
+    `universe_extension`): 25 commodity ETFs never used in the study. The effect is
+    present in 22 of 25 (strongest in junior miners and the Sprott physical trusts), but
+    adding them to the ranking hurts both before and after costs, because the thin new names
+    crowd out liquid ones. The universe stays at 36. PSLV/PHYS/URNJ/NUKZ/COPJ are on a watch list.

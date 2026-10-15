@@ -189,6 +189,14 @@ how to read it:
 - in **2024–26 everything except short-only survives** up to $100k, and to ~$300k with the ADV floor
 - the impact model is a guess for auction orders. the truth for a $25k account is probably between the "fees only" and "+ impact" columns
 
+### missing ETFs? (out-of-universe test)
+
+added 25 commodity ETFs that were never in the study (URNJ, NUKZ, COPJ, SETM, RING, GOAU, SGDM, SGDJ, SLVP, SLX, PSLV, PHYS, SPPP, CEF, XLE, XES, IEO, PXJ, GSG, PDBC, KRBN, BATT, CUT, GNR, HAP):
+
+- **the effect shows up in 22 of 25.** strongest in junior/themed miners (overnight−intraday Sharpe: COPJ 3.4, SETM 2.8, NUKZ 2.5, SLVP 2.3, RING 2.0, URNJ 1.9) and the Sprott physical trusts (PSLV 1.75, PHYS 1.56). nothing in broad commodities or carbon (GSG, KRBN). independent confirmation that it's real
+- **adding them doesn't improve the strategy.** the ranking grabs the thin new names (COPJ, GOAU, SGDJ trade <$6M/day) and they take 34% of slots. pre-sample at flat cost: 1.04 → 0.72. post-cost it's worse in every case, even with the ADV ≥ $20M floor (#2 at $100k OOS: 1.71 → 1.43)
+- **watch list:** PSLV and PHYS (liquid, $130–195M/day), URNJ / NUKZ / COPJ once they're bigger
+
 ## then i tried to kill it
 
 | up-day LS, Sharpe | pre | disc | OOS |
