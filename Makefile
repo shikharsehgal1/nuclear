@@ -1,4 +1,4 @@
-.PHONY: research ingest validate panel backtests robustness capacity report test lint
+.PHONY: overnight research ingest validate panel backtests robustness capacity report test lint
 
 research: validate-config ingest panel test backtests robustness capacity report
 
@@ -34,3 +34,8 @@ lint:
 
 paper:
 	uv run python scripts/paper_trade.py
+
+overnight:
+	uv run python scripts/overnight_ingest.py
+	uv run pytest -q tests/test_overnight.py
+	uv run python scripts/overnight_research.py

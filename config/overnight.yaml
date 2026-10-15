@@ -1,0 +1,62 @@
+# Overnight-drift study. Frozen 2026-10-15 before any of the backtests below were run.
+# Prior exploration (KIBOT 5-min, 2016-2023 + one look at 2024-26 per-ticker stats) is
+# disclosed in docs/OVERNIGHT_DECISIONS.md. Parameters are chosen on DISCOVERY only.
+
+data:
+  start: "2009-01-01"
+  end: "2026-10-15"          # exclusive; last bar 2026-10-14
+  min_dollar_adv: 2000000     # trailing 63d median $ volume to be eligible
+  max_abs_overnight: 0.30    # |overnight| above this = data error -> day dropped
+
+periods:
+  presample:  ["2010-01-01", "2015-12-31"]   # never looked at; run once
+  discovery:  ["2016-01-01", "2023-12-31"]   # only period used to pick parameters
+  oos:        ["2024-01-01", "2026-10-14"]
+
+# Commodity-linked US ETFs, chosen for being commodity exposure, NOT for past results.
+universe:
+  physical_or_futures: [GLD, IAU, SLV, SIVR, PPLT, PALL, CPER, USO, BNO, UNG, UGA, DBA, DBB, DBC,
+                        DBO, CORN, WEAT, SOYB, CANE]
+  equities_miners_producers: [GDX, GDXJ, SIL, SILJ, COPX, URA, URNM, NLR, REMX, LIT, XME, PICK,
+                              XOP, OIH, WOOD, MOO, FCG]
+controls: [SPY, IWM, TLT]     # reported, never traded
+
+strategy:
+  rebalance: monthly                # re-select at each month start
+  selection_score: sharpe_on_minus_id   # trailing Sharpe of (overnight - intraday)
+  weighting: inverse_vol_63d
+  grid:
+    lookback_months: [12, 24, 36]
+    top_k: [3, 5, 8]
+  variants: [ON, LS]   # ON = long close->open; LS = ON + short open->close (same capital)
+
+costs:  # per side, bps
+  commission_bps: 0.5
+  auction_slippage_bps: 1.0   # MOC/MOO: no spread crossed; fee + auction noise
+  spread_floor_cents: 0.5     # half-spread floor = half a tick
+  spread_tiers:               # trailing $ADV floor -> half-spread bps (crossing the spread)
+    1.0e9: 0.5
+    1.0e8: 2.0
+    2.0e7: 5.0
+    5.0e6: 10.0
+    0: 20.0
+  stress_multiplier: 2.0
+  impact_coefficient: 0.1     # sqrt impact: coeff * sigma_daily * sqrt(Q / auction_volume)
+  auction_share_of_adv: 0.08  # open+close auctions ~ 8% of ETF ADV combined (conservative)
+  max_auction_participation: 0.10
+
+# FROZEN 2026-10-15 after the discovery-only grid + improvement tests (docs/OVERNIGHT_DECISIONS.md).
+# Pre-sample and OOS were not run before this block was written.
+final:
+  lookback_months: 24       # centre of the plateau, not the best cell (12/3)
+  top_k: 5
+  execution: auction        # MOC in, MOO out. Crossing the spread is reported as a stress.
+  strategies:
+    core_ON:  {variant: ON, up_day: false}
+    core_LS:  {variant: LS, up_day: false}
+    upday_ON: {variant: ON, up_day: true}
+    upday_LS: {variant: LS, up_day: true}
+  # up_day: tonight's overnight book goes only to selected names that are up open->(close);
+  # weights renormalised, gross <= 1, cash if none are up. In production the sign is taken
+  # from the ~15:45 price before the MOC cutoff (agrees with the close sign ~95% of days).
+  n_trials_for_dsr: 200     # 36 grid cells x costs + 8 improvement tests + ~150 exploratory configs
