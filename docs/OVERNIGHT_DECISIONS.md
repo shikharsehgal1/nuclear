@@ -73,3 +73,12 @@
     present in 22 of 25 (strongest in junior miners and the Sprott physical trusts), but
     adding them to the ranking hurts both before and after costs, because the thin new names
     crowd out liquid ones. The universe stays at 36. PSLV/PHYS/URNJ/NUKZ/COPJ are on a watch list.
+19. **Real auction prints** (`scripts/overnight_auction_ticks.py`): NYSE's free TAQ
+    sample files (NYSE Arca trades, 2026-07-01 and 07-02), streamed and filtered to 64
+    ETFs. Opening prints (cond `O`) and closing prints (cond `6`) equal the official
+    open/close (median 0.0 bp). Auctions are ~1.1% of consolidated daily volume each
+    (median), not the 4% assumed, so `auction_share_of_adv` changed 0.08 → 0.022 and every
+    impact-based result was rerun. Capacity falls to ~$10–50k (~$100k with ADV ≥ $20M), and
+    long-only beats long/short once impact counts, so README ranks it #1. One awk-streamed
+    chunk was truncated (gzip EOF), so both days were refetched with the Python downloader
+    (July 1 count identical, July 2 complete). Only 2 days, and July 2 preceded a holiday.

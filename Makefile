@@ -42,4 +42,5 @@ overnight:
 	uv run python scripts/overnight_sensitivity.py
 	uv run python scripts/overnight_postcost.py
 	uv run python scripts/overnight_auction_prices.py
+	uv run python scripts/overnight_auction_ticks.py
 	uv run python scripts/overnight_universe_ext.py

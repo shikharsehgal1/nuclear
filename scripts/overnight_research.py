@@ -327,7 +327,7 @@ def capacity(P, curves):
     ax.axhline(0, color="k", lw=0.6)
     ax.set_xlabel("capital (USD, log)")
     ax.set_ylabel("OOS net Sharpe")
-    ax.set_title("capacity: sqrt-impact against auction volume (8% of ADV)")
+    ax.set_title("capacity: sqrt-impact against measured auction volume (~1.1% of ADV per auction)")
     ax.legend()
     save(fig, "09_capacity.png")
     return df

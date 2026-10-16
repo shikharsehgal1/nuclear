@@ -45,7 +45,7 @@ costs:  # per side, bps
     0: 20.0
   stress_multiplier: 2.0
   impact_coefficient: 0.1     # sqrt impact: coeff * sigma_daily * sqrt(Q / auction_volume)
-  auction_share_of_adv: 0.08  # open+close auctions ~ 8% of ETF ADV combined (conservative)
+  auction_share_of_adv: 0.022 # open+close combined; MEASURED median 1.1% per auction (NYSE Arca TAQ, 2026-07-01/02). was 0.08 (assumed)
   max_auction_participation: 0.10
   # "realistic" post-cost model (scripts/overnight_postcost.py), per order:
   per_share_commission: 0.0035   # IBKR Pro tiered
