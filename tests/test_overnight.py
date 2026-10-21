@@ -82,3 +82,15 @@ def test_ls_pays_twice_the_sides_and_missing_legs_are_untraded():
     P["on"].iloc[160, :] = np.nan
     r = backtest(P, w, "ON", "auction")
     assert r.iloc[60].gross == 0 and r.iloc[60].cost == 0
+
+
+def test_up_day_flat_session_is_not_up_and_signal_can_be_replaced():
+    P = _panel()
+    w = pd.DataFrame(0.5, P["on"].index, ["T0", "T1"])
+    t, t1 = P["on"].index[100], P["on"].index[101]
+    P["id"].loc[t, ["T0", "T1"]] = [2.2e-16, 0.01]                    # T0 flat (float noise)
+    assert up_day_tilt(P, w).loc[t1, "T0"] == 0.0
+    early = P["id"].copy()
+    early.loc[t, ["T0", "T1"]] = [0.01, -0.01]                        # 15:30 signal says otherwise
+    tilt = up_day_tilt(P, w, early)
+    assert tilt.loc[t1, "T0"] == 2.0 and tilt.loc[t1, "T1"] == 0.0

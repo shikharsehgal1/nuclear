@@ -117,13 +117,15 @@ def period(r: pd.Series | pd.DataFrame, name: str):
     return r.loc[a:b]
 
 
-def up_day_tilt(P: dict, w: pd.DataFrame) -> pd.DataFrame:
+def up_day_tilt(P: dict, w: pd.DataFrame, intraday: pd.DataFrame | None = None) -> pd.DataFrame:
     """Overnight weights only on selected names that were up open->close on the day
     the night starts, renormalised to the original gross. Returned as a multiplier on `w`.
 
     Alignment: P["on"] dated t is the night ENDING at t's open, so the signal for it
-    is the intraday return of t-1 (hence the shift)."""
-    up = (P["id"][w.columns].shift(1) > 0).astype(float)
+    is the intraday return of t-1 (hence the shift). `intraday` optionally replaces
+    open->close with a return observable before the MOC cutoff (e.g. open->15:30)."""
+    sig = (intraday if intraday is not None else P["id"]).reindex(columns=w.columns)
+    up = (sig.shift(1) > 1e-9).astype(float)  # flat days (float noise ~1e-16) are not up days
     wu = w * up
     wu = wu.div(wu.sum(axis=1).replace(0, np.nan), axis=0).mul(w.sum(axis=1), axis=0).fillna(0.0)
     return (wu / w).replace([np.inf, -np.inf], 0.0).fillna(0.0)

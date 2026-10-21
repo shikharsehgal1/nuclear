@@ -61,11 +61,11 @@ def leg_cost(P, w: pd.DataFrame, aum: float, sells_per_day: int = 1, impact_on: 
 
 
 def run(P, aum: float, kind: str, vix_scale=None, spy_beta_hedge=False, impact_on=True,
-        min_adv=None, universe=None) -> pd.Series:
+        min_adv=None, universe=None, signal=None) -> pd.Series:
     w = weights(P, members_from_scores(
         P, month_scores(P, CFG["final"]["lookback_months"], universe=universe, min_adv=min_adv),
         CFG["final"]["top_k"]))
-    tilt = up_day_tilt(P, w) if kind.startswith("upday") else 1.0
+    tilt = up_day_tilt(P, w, signal) if kind.startswith("upday") else 1.0
     s = vix_scale.reindex(w.index).fillna(1.0) if vix_scale is not None else pd.Series(1.0, index=w.index)
     on, idr = P["on"][w.columns], P["id"][w.columns]
     w_on = (w * tilt).mul(s, axis=0).where(on.notna(), 0.0)
