@@ -1,10 +1,10 @@
-"""Pull daily bars for the overnight universe (+ hourly for exit-timing checks)."""
+"""Pull daily bars for the overnight universe (+ hourly for exit-timing and the audit's 15:30 signal)."""
 
-from sput_research.overnight.data import CFG, fetch_daily, fetch_hourly, fetch_minute, fetch_vix
+from sput_research.overnight.data import CFG, fetch_daily, fetch_hourly, fetch_minute, fetch_vix, tradeable_universe
 
 MINUTE = ["URNM", "URA", "NLR", "SILJ", "SIL", "GDXJ", "COPX", "REMX", "XME", "FCG", "PALL", "BNO",
           "GDX", "GLD", "SPY"]
-HOURLY = ["URNM", "URA", "COPX", "SIL", "REMX", "GDXJ", "SILJ", "GLD", "SLV", "USO", "SPY"]
+HOURLY = tradeable_universe() + ["SPY"]
 
 if __name__ == "__main__":
     import sys

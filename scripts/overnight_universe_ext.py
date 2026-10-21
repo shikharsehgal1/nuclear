@@ -45,7 +45,7 @@ def main():
         for cl, aum, imp, adv in [("fees only $25k", 25_000, False, None), ("+impact $100k", 100_000, True, None),
                                   ("+impact $100k, ADV>=$20M", 100_000, True, 2e7),
                                   ("+impact $300k, ADV>=$20M", 300_000, True, 2e7)]:
-            for slab, kind, sc, hedge in [("#1 LS+VIX+SPY", "upday_LS", vs, True), ("#2 ON+VIX", "upday_ON", vs, False)]:
+            for slab, kind, sc, hedge in [("#2 LS+VIX+SPY", "upday_LS", vs, True), ("#1 ON+VIX", "upday_ON", vs, False)]:
                 r = pc.run(P, aum, kind, sc, hedge, impact_on=imp, universe=uni, min_adv=adv)
                 rows.append({"universe": lab, "case": f"{slab}, {cl}", **{n: sharpe(period(r, n)) for n in PERIODS}})
         share = (w > 0).sum() / (w > 0).sum().sum()

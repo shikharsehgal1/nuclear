@@ -82,3 +82,15 @@
     long-only beats long/short once impact counts, so README ranks it #1. One awk-streamed
     chunk was truncated (gzip EOF), so both days were refetched with the Python downloader
     (July 1 count identical, July 2 complete). Only 2 days, and July 2 preceded a holiday.
+20. **Audit** (`scripts/overnight_audit.py`), before quoting $ expectations:
+    - an independent re-implementation from the raw bars (own split, ranking, weights,
+      costs, day-by-day loop) matched the library on 4053 of 4054 days. The odd day was a
+      session with open == close giving id ≈ 2e-16, counted as "up". Fixed (`> 1e-9`); every
+      result moved in the 3rd–4th decimal. After the fix the two agree on every day.
+    - the up-day signal used the official close, which is unknown when the MOC order goes
+      in. With the 15:30 price instead (hourly bars, all of 2024–26): the sign agrees 94% of
+      days and #1's 2024–26 Sharpe goes 1.52 → 1.41 ($50k, ADV ≥ $20M, fees + impact).
+      Small cost; README now quotes both.
+    - scrambling every input after 2021-06-15 leaves P&L before it unchanged (0.0 bp).
+    - no night of a held name was dropped by the stale/|on|>30% filters.
+    - the extension table had #1/#2 labels from before the re-ranking; relabelled.
