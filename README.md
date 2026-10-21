@@ -27,6 +27,14 @@ the VIX sizing and SPY hedge were found **after** OOS was known, so #1 and #2 ar
 
 **risk, #1 at $25k:** fees + impact, 2024–26: 26%/yr. full 2011–26, fees only: Sharpe 1.26, 15%/yr, vol 12%, max DD −35%.
 
+**what $50k would have made** (#1, fees + impact, ADV ≥ $20M filter; [`audit_50k_by_year.csv`](reports/overnight/tables/audit_50k_by_year.csv)):
+
+| 2016 | 2017 | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 (to Oct 14) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| +14% | +3% | −15% | +2% | +27% | +16% | −5% | +4% | +4% / **+9%** | +59% / **+57%** | +10% / **+6%** |
+
+bold = with the up-day signal taken at 15:30 instead of the close (what you can actually trade, below). median year since 2016 is **~+4% (~$2k)**; 2024–26 averaged ~23%/yr but that's mostly 2025's uranium run. 2012–15 lost money every year (−5% to −22%). losing years: 2 of 11 since 2016, 6 of 16 since 2011. plan on **~0–15% in a normal year**, a real chance of a −15–20% year, and the occasional +30–60% commodity rally.
+
 ---
 
 ## the effect
@@ -96,7 +104,7 @@ no, and this is the big difference from SPUT/YCA, which only trades when the z-s
 
 ![exit timing](reports/overnight/figures/07_exit_timing.png)
 
-the up-day signal uses the close in the backtest. live, you'd use the price a few minutes before the MOC cutoff. checked on KIBOT 5-min data for 2016–23: the 15:45 sign agrees with the close sign on ~95% of days, and the after-up/after-down gap is still there.
+the up-day signal uses the close in the backtest, which you can't see when the MOC order has to go in. live, use the price a few minutes before the cutoff. checked twice: on KIBOT 5-min data for 2016–23 the 15:45 sign agrees with the close ~95% of days, and on hourly bars for all of 2024–26 the **15:30** sign agrees 94% of days. re-running #1 on the 15:30 signal ($50k, fees + impact, ADV ≥ $20M), 2024–26 Sharpe goes **1.52 → 1.41**, 24% → 23%/yr. a small haircut, not a hidden lookahead.
 
 ## variations, monte carlo, risk overlays, hedging
 
@@ -136,7 +144,7 @@ all of this was run **after** the rule was frozen, so it's sensitivity analysis.
 | sizing | Sharpe pre / disc / OOS | max DD full | avg size |
 |---|---|---|---|
 | as frozen (1x) | 1.04 / 1.71 / 2.12 | −27% | 1.00 |
-| **15/VIX, max 1x** | **1.05 / 1.95 / 2.38** | **−18%** | 0.85 |
+| **15/VIX, max 1x** | **1.05 / 1.95 / 2.37** | **−18%** | 0.85 |
 | 15/VIX, max 2x | 1.07 / 1.97 / 2.40 | −21% | 0.91 |
 | half size when VIX > 25 | 0.98 / 1.86 / 2.26 | −20% | 0.94 |
 | vol target 20% (de-risk only) | 0.97 / 1.86 / 2.29 | −20% | — |
@@ -153,7 +161,7 @@ the strategy still makes money when VIX is high (Sharpe 1.1–1.6 above VIX 25),
 | short SPY overnight (beta-sized) | 0.66 / 1.36 / 1.71 | −34% | −0.33 |
 | short GDX overnight (beta-sized) | 0.70 / 1.30 / 1.83 | −29% | −0.23 |
 | **beta-neutral: hold long SPY ≈ −beta (avg 0.35x)** | **1.18 / 1.88 / 2.36** | −29% | **0.05** |
-| beta-neutral: hold long GDX | 0.95 / 1.91 / 2.60 | −26% | −0.09 |
+| beta-neutral: hold long GDX | 0.95 / 1.91 / 2.59 | −26% | −0.09 |
 
 shorting a hedge overnight is the wrong way round: it adds to the short beta and pays away SPY/GDX's own overnight drift. what helps is the opposite: a small **long SPY** sized to the trailing beta makes it market-neutral (corr ~0) and lifts Sharpe in every period.
 
@@ -167,7 +175,7 @@ shorting a hedge overnight is the wrong way round: it adds to the short beta and
 | **second source:** Nasdaq.com official open/close vs yahoo, Oct 2016 – Oct 2026 | identical to the cent on **96–100%** of days for 13 of 15 ETFs, and 95% of the rest are within 1 bp. exceptions: NLR closes before 2024 (64–73% identical, still <1 bp) and GDX opens 2024–26 (87%). so the backtest uses the official opening/closing prints |
 | price move open → 09:31 | median **14–28 bp** in the miner ETFs (GLD/SPY ~3.5). that's about the whole nightly edge, so **MOO, not "market order right after the open"** |
 | official close vs the 15:59 price | median 2–7 bp |
-| official close vs 15:50 (MOC cutoff) | median 8–21 bp. why the up-day signal has to use the pre-cutoff price (agrees with the close ~95% of days, see above) |
+| official close vs 15:50 | median 8–21 bp. why the up-day signal has to use a pre-cutoff price (costs ~0.1 Sharpe, see above) |
 | per-share fees ($0.005/share) | 0.1–2.3 bp per trade. cheap ETFs cost the most (PALL 2.3, SILJ 1.8, FCG 1.7) |
 | **real auction prints** (NYSE free TAQ samples, NYSE Arca trades, 2026-07-01/02, 54 ETFs) | opening prints (condition `O`) and closing prints (`6`) **equal the official open/close** (median 0.0 bp). thin ETFs (GOAU, CUT, KRBN) had sub-$6k "auctions" off by 25–56 bp |
 | **auction size** (same data) | median **~1.1% of daily volume per auction**, not the 4% i'd assumed. URNM open $492k / close $304k, SILJ $1.2M / $389k, NLR $1.0M / $528k, URA $2.9M / $9.2M, COPX $2.5M / $2.8M, REMX $657k / $1.1M. big ETFs have big closes (GDX 14%, GDXJ 11%). only 2 days, and July 2 was the day before a holiday |
@@ -178,10 +186,10 @@ shorting a hedge overnight is the wrong way round: it adds to the short beta and
 
 | strategy (Sharpe pre / disc / OOS) | fees only, $25k | + impact, $25k | + impact, $100k | + impact, ADV≥$20M, $100k | + impact, ADV≥$20M, $300k |
 |---|---|---|---|---|---|
-| #1 up-day long overnight + 15/VIX | −0.37 / 1.68 / 2.51 | −1.80 / −0.14 / 1.66 | −3.15 / −1.90 / 0.81 | −1.09 / 0.21 / 1.22 | −1.74 / −0.52 / 0.46 |
-| #2 up-day LS + 15/VIX + long-SPY hedge | 0.58 / 1.41 / 2.21 | −0.93 / −0.68 / 1.24 | −2.37 / −2.71 / 0.31 | −0.43 / −0.43 / 0.89 | −1.11 / −1.26 / −0.02 |
-| #3 up-day LS (frozen) | 0.50 / 1.10 / 1.82 | −0.97 / −0.75 / 0.86 | −2.39 / −2.57 / −0.07 | −0.56 / −0.66 / 0.47 | −1.27 / −1.53 / −0.45 |
-| up-day long overnight only | −0.10 / 1.66 / 2.43 | −1.51 / 0.02 / 1.60 | −2.86 / −1.60 / 0.78 | −0.83 / 0.11 / 1.14 | −1.50 / −0.65 / 0.36 |
+| #1 up-day long overnight + 15/VIX | −0.37 / 1.68 / 2.51 | −1.80 / −0.14 / 1.66 | −3.15 / −1.90 / 0.81 | −1.09 / 0.22 / 1.22 | −1.74 / −0.52 / 0.46 |
+| #2 up-day LS + 15/VIX + long-SPY hedge | 0.58 / 1.41 / 2.21 | −0.93 / −0.68 / 1.24 | −2.37 / −2.71 / 0.31 | −0.43 / −0.42 / 0.89 | −1.11 / −1.26 / −0.02 |
+| #3 up-day LS (frozen) | 0.50 / 1.10 / 1.82 | −0.97 / −0.75 / 0.86 | −2.38 / −2.57 / −0.07 | −0.56 / −0.66 / 0.47 | −1.27 / −1.53 / −0.45 |
+| up-day long overnight only | −0.10 / 1.66 / 2.43 | −1.50 / 0.02 / 1.60 | −2.85 / −1.60 / 0.78 | −0.83 / 0.11 / 1.14 | −1.50 / −0.64 / 0.36 |
 | #4 short-only | 0.68 / 0.06 / 0.46 | −0.12 / −0.96 / −0.11 | −0.88 / −1.96 / −0.65 | −0.11 / −0.90 / −0.27 | −0.49 / −1.38 / −0.82 |
 
 how to read it:
@@ -223,6 +231,17 @@ what landed:
 - **2024–26 is a uranium story.** take out URA/URNM/NLR and OOS LS drops to 0.29. it held up without uranium in 2011–23 (0.98 / 1.44), so it's not *only* uranium, but recently it mostly is.
 - the whole grid is positive in discovery and OOS for both variants (fig above), so it's not one lucky parameter cell. ON in the pre-sample is ~0 across the whole grid.
 
+## audit (before quoting dollars)
+
+[`scripts/overnight_audit.py`](scripts/overnight_audit.py), results in [`audit.csv`](reports/overnight/tables/audit.csv):
+
+| check | result |
+|---|---|
+| independent re-implementation of #1 from the raw bars (own return split, ranking, weights, costs, day-by-day loop) | matches the library on **every one of 4,054 days**. it first disagreed on 1 day: a flat session (open = close) scored as an "up" day from float noise. fixed; results moved in the 3rd–4th decimal |
+| scramble every price after 2021-06-15 | P&L before that date unchanged (0.0 bp). no lookahead |
+| up-day signal at 15:30 instead of the close | 94% agreement, 2024–26 Sharpe 1.52 → 1.41 |
+| nights of held names dropped by the stale-bar / ±30% filters | 0 |
+
 ## verdict
 
 - **the effect is real**: positive in all three periods at low cost, in 22 of 25 ETFs never tested, and the ranked picks beat 100% of random picks.
@@ -247,6 +266,7 @@ optional: `KIBOT_DIR=/path/to/KIBOT make overnight` adds the 2016–23 5-min exi
 | `docs/OVERNIGHT_DECISIONS.md` | every call in order, incl. the lookahead bug i caught in myself |
 | `src/sput_research/overnight/` | data split + walk-forward strategy |
 | `tests/test_overnight.py` | point-in-time tests (poisoned future data must not change picks/signals) |
+| `scripts/overnight_audit.py` | independent re-implementation, 15:30-signal re-run, lookahead scramble, $50k by year |
 | `reports/overnight/tables/` | every number above |
 
 ## the fine print
@@ -256,3 +276,4 @@ optional: `KIBOT_DIR=/path/to/KIBOT make overnight` adds the 2016–23 5-min exi
 - spreads come from a tiered $ADV table, not measured quotes. a daily-bar spread estimator was tried and thrown out (it put GLD at 30 bp).
 - days with stale or zero-volume bars are not traded (CPER/CANE/NLR lose 12–23% of days to this).
 - no taxes. every overnight hold is a short-term gain.
+- the universe is ETFs that exist today. commodity ETFs/ETNs that closed before 2026 aren't in it, which flatters the early years somewhat.
