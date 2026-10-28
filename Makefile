@@ -47,3 +47,4 @@ overnight:
 	uv run python scripts/overnight_audit.py
 	uv run python scripts/overnight_auction_imbalance.py
 	uv run python scripts/overnight_risk.py
+	uv run python scripts/overnight_auction_rules.py

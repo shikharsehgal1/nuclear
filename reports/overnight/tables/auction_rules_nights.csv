@@ -1,0 +1,9 @@
+nights,n,mean_overnight_bps,median_overnight_bps,weighted_mean_overnight_bps
+close below 15:30 (sell-imbalance footprint),799,29.67210888211422,28.079258229336546,18.885648096501924
+close above 15:30,821,18.528553370721397,18.902719180373673,30.740850033443866
+gap down > 100 bp: sell at open,258,-200.85076710431005,,
+gap down > 100 bp: sell at 10:30,258,-242.2833502993679,,
+gap down > 50 bp: sell at open,434,-148.47088736570925,,
+gap down > 50 bp: sell at 10:30,434,-176.84287505663607,,
+gap down > 25 bp: sell at open,551,-124.89627094343254,,
+gap down > 25 bp: sell at 10:30,551,-153.7901053971512,,

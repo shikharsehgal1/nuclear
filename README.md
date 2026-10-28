@@ -20,10 +20,23 @@ the VIX sizing and SPY hedge were found **after** OOS was known, so #1 and #2 ar
 
 **rules:**
 - **MOO/MOC orders only.** the price moves 14–28 bp in the first minute after the open, about the whole nightly edge (~17 bp)
-- **size ~$10–50k.** up to ~$100k with an ADV ≥ $20M filter and the long-only version. stay under ~10% of each auction (URNM's closing auction was ~$300k)
+- **size ~$10–50k.** up to ~$100k with an ADV ≥ $20M filter and the long-only version. **cap each order at 10% of the auction** (URNM's closing auction was ~$300k): it lifts 2024–26 Sharpe 1.41 → 1.45 at $50k and 1.11 → 1.28 at $100k ([auction theory](#auction-theory-who-pays-in-the-auction))
+- plain MOC/MOO, no tight limits: limit-on-close caps and open floors both tested worse
 - #2 needs a margin account and intraday short locates
 - 2024–26 was carried by uranium (without it, OOS Sharpe 0.29 even at flat cost)
 - paper trade first
+
+**where the 2.5 Sharpe went** (#1, 2024–26 / full 2011–26, [`sharpe_waterfall.csv`](reports/overnight/tables/sharpe_waterfall.csv)):
+
+| step | Sharpe 2024–26 | Sharpe full | return/yr 2024–26 |
+|---|---|---|---|
+| fees only, $25k, all names, signal at the close | 2.51 | 1.25 | 43% |
+| same at $50k | 2.53 | 1.27 | 43% |
+| + price impact of your own orders | 1.32 | −0.85 | 20% |
+| + only ETFs trading ≥ $20M/day | 1.52 | 0.29 | 24% |
+| + up-day signal at 15:30, tradeable (**as traded**) | **1.41** | 0.28 | 23% |
+
+all rows include commissions, exchange and SEC fees, and 1 bp auction slippage. impact is what takes it from 2.5 to ~1.4. the auction feed below confirms the impact size.
 
 **risk, #1 as you'd run it** ($50k, fees + impact, ADV ≥ $20M, 15:30 signal where hourly bars exist; [`risk_50k.csv`](reports/overnight/tables/risk_50k.csv)):
 
@@ -240,11 +253,18 @@ the open and close are **call auctions**: all orders cross at one price, the one
 - **the open is the expensive leg.** it costs ~2.6× the close per unit of imbalance. thin opens are harsh: URNM's open moved 37–50 bp toward a buy imbalance both days, REMX's 26–51 bp toward a sell imbalance.
 - **closes lean sell (61%).** a MOC buy is usually on the paid side, consistent with the overnight premium being partly pay for taking the day's inventory overnight.
 
-**what this changes for live trading** (rules, not backtested; 2 days can't support a backtest):
-- read the closing imbalance before the cutoff. if it's a **sell** imbalance, your buy is paid to absorb it. if it's a large **buy** imbalance, you're adding to it.
-- use **limit-on-close** buys capped near the reference price instead of plain MOC, so a buy never fills deep into a buy imbalance. the risk is that you miss fills on the strongest nights.
-- size against the **paired + imbalance** shares the feed shows, not against ADV.
-- the open is where the cost is. a limit-on-open sell floored a few bp under the reference caps it. the risk is that you hold into the session, which gives back ~half the overnight gain by 10:30.
+**the four execution rules this suggests, tested** on #1 at $50k with fees + impact ([`scripts/overnight_auction_rules.py`](scripts/overnight_auction_rules.py), [`auction_rules.csv`](reports/overnight/tables/auction_rules.csv)). the imbalance feed only covers 2 days, so rules 1, 2 and 4 use price proxies from the hourly bars, 2024–26 only:
+
+| rule | how it's tested | Sharpe 2024–26 (as traded: 1.41) | verdict |
+|---|---|---|---|
+| 3. size against the auction, not ADV | cap each order at x% of the auction (est. 1.1% of ADV) | 10%: **1.45**, 5%: **1.54** at $50k. 10%: **1.28** vs 1.11 at $100k. 5%: **0.84** vs 0.51 at $250k. full period better too | **keep, 10% cap** |
+| 1+2. buy into sell imbalances, limit-on-close capped near the reference | buy only if close × (1 + own impact) ≤ 15:30 price + cap | +50 bp: 1.42 (fills 94%). +25 bp: 1.05. +0 bp: 0.50 (fills 46%) | **no**, beyond a wide +50 bp safety cap |
+| 4. limit-on-open sell with a floor | proxy: on gap-downs past the floor, skip the open and sell at 10:30 | −100 bp: 0.61. −25 bp: 0.26 | **no, keep MOO** |
+
+- **rule 3 works because impact is concave.** trimming the few orders that are a big share of a thin auction saves more impact than it costs in exposure. live, size against the feed's paired + imbalance shares at 15:50, not the ADV estimate.
+- **rules 1+2 fail on the book.** equal-weighted, nights that closed below 15:30 (the price footprint of a sell imbalance) did earn more overnight, 30 vs 19 bp. weighted the way the book holds them, they earn **less**, 19 vs 31 bp. the equal-weight gap comes from REMX, COPX and NLR, and most names show nothing. a tight limit mostly skips good nights.
+- **rule 4 fails because gap-downs keep going.** held names that opened >1% down averaged −201 bp sold at the open but −242 bp at 10:30. a floor that doesn't fill leaves you selling lower. caveat: the real rule floors against the pre-open indicative price, which this data doesn't have.
+- **net: one auction rule earns its place, the 10% cap.** the rest of the theory is right about who pays inside the auction, but that cost is small next to the overnight move. trying to dodge it costs more in missed or worse fills.
 
 ### missing ETFs? (out-of-universe test)
 
@@ -317,6 +337,7 @@ optional: `KIBOT_DIR=/path/to/KIBOT make overnight` adds the 2016–23 5-min exi
 | `scripts/overnight_audit.py` | independent re-implementation, 15:30-signal re-run, lookahead scramble, $50k by year |
 | `scripts/overnight_auction_imbalance.py` | Arca imbalance feed: who pays in the auction, impact coefficient fit |
 | `scripts/overnight_risk.py` | risk stats and hedges for #1 at $50k |
+| `scripts/overnight_auction_rules.py` | Sharpe waterfall, auction execution rules (participation cap, LOC cap, open floor) |
 | `reports/overnight/tables/` | every number above |
 
 ## the fine print
