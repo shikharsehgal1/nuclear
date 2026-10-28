@@ -22,6 +22,7 @@ the VIX sizing and SPY hedge were found **after** OOS was known, so #1 and #2 ar
 - **MOO/MOC orders only.** the price moves 14–28 bp in the first minute after the open, about the whole nightly edge (~17 bp)
 - **size ~$10–50k.** up to ~$100k with an ADV ≥ $20M filter and the long-only version. **cap each order at 10% of the auction** (URNM's closing auction was ~$300k): it lifts 2024–26 Sharpe 1.41 → 1.45 at $50k and 1.11 → 1.28 at $100k ([auction theory](#auction-theory-who-pays-in-the-auction))
 - plain MOC/MOO, no tight limits: limit-on-close caps and open floors both tested worse
+- **candidate upgrade:** rank on the overnight hit rate (share of nights up, 24m) instead of overnight − intraday. it beat the frozen score in every period at every size ([which ETFs to pick](#which-etfs-to-pick-rank-on-the-overnight-leg)). found after OOS, so paper trade it alongside
 - #2 needs a margin account and intraday short locates
 - 2024–26 was carried by uranium (without it, OOS Sharpe 0.29 even at flat cost)
 - paper trade first
@@ -143,7 +144,7 @@ all of this was run **after** the rule was frozen, so it's sensitivity analysis.
 - 6–18 months with 2–6 names is the most balanced. 24m/top 5 is fine
 - 1–3 month windows (~60 days) work early but are weaker OOS (~0.6–1.6). 36–48 months are weak early but best OOS (uranium stayed on top for years)
 - 10–15 names dilutes it. blending the 6+12+24 month rankings (~8 names) is also worse: 0.86 / 1.94 / 1.84
-- other ranking scores (raw mean gap, overnight-only Sharpe) land in the same place, nothing better
+- other ranking scores (raw mean gap, overnight-only Sharpe) land in the same place for the long/short book. for #1 (long overnight only) ranking on the overnight leg alone is better, see [which ETFs to pick](#which-etfs-to-pick-rank-on-the-overnight-leg)
 
 ![score variants](reports/overnight/figures/13_score_variants.png)
 
@@ -266,6 +267,34 @@ the open and close are **call auctions**: all orders cross at one price, the one
 - **rule 4 fails because gap-downs keep going.** held names that opened >1% down averaged −201 bp sold at the open but −242 bp at 10:30. a floor that doesn't fill leaves you selling lower. caveat: the real rule floors against the pre-open indicative price, which this data doesn't have.
 - **net: one auction rule earns its place, the 10% cap.** the rest of the theory is right about who pays inside the auction, but that cost is small next to the overnight move. trying to dodge it costs more in missed or worse fills.
 
+### which ETFs to pick: rank on the overnight leg
+
+the frozen rule ranks on the Sharpe of (overnight − intraday). that score was built for the long/short book, but #1 only holds the overnight leg. i tested 10 ranking scores × 4 lookbacks on #1 as traded ($50k, fees + impact, ADV ≥ $20M, 15:30 signal, 15/VIX, 10% auction cap; [`scripts/overnight_ranking.py`](scripts/overnight_ranking.py), [`ranking_scores.csv`](reports/overnight/tables/ranking_scores.csv)):
+
+| family | best of family, Sharpe 2011–15 / 2016–23 / 2024–26 | full | max DD |
+|---|---|---|---|
+| **overnight only** (mean, Sharpe, hit rate, cost-aware) | on_mean 12m: −0.49 / **0.95** / 1.32 | 0.64 | −46% |
+| overnight − intraday (frozen: gap Sharpe 24m) | −0.89 / 0.54 / 1.45 | 0.31 | −53% |
+| intraday only (worst day-sessions first) | −1.56 / 0.57 / 0.51 | −0.02 | −61% |
+| no ranking (all positive names, by liquidity) | −1.25 / 0.63 / 0.52 | 0.09 | −56% |
+
+- **picking by 2016–23 alone** chooses an overnight score (mean overnight, 12m). 7 of the top 8 discovery cells are overnight scores.
+- **ranking matters.** with no ranking, 2024–26 falls to 0.05–0.52. ranking by intraday weakness is the worst: names that sell off in the day aren't the ones that rally overnight.
+- **holding the frozen 24m lookback and changing only the score**, the overnight scores beat the frozen one in every period at every size. the steadiest is the **overnight hit rate** (share of nights up):
+
+| account | frozen gap Sharpe 24m | **overnight hit rate 24m** | cost-aware overnight Sharpe 24m |
+|---|---|---|---|
+| $10k | −0.76 / 0.76 / 1.68, DD −47% | **−0.18 / 0.97 / 1.91, DD −34%** | 0.23 / 0.84 / 1.93, DD −21% |
+| $25k | −0.78 / 0.70 / 1.61, DD −48% | **−0.18 / 0.93 / 1.89, DD −35%** | 0.10 / 0.71 / 1.50, DD −27% |
+| $50k | −0.89 / 0.54 / 1.45, DD −53% | **−0.32 / 0.76 / 1.73, DD −38%** | 0.37 / 0.71 / 1.76, DD −19% |
+| $100k | −1.14 / 0.37 / 1.28, DD −61% | **−0.62 / 0.60 / 1.53, DD −44%** | 0.15 / 0.35 / 1.49, DD −26% |
+| $250k | −1.39 / 0.22 / 0.80, DD −63% | **−1.04 / 0.46 / 1.12, DD −53%** | −0.29 / −0.02 / 0.38, DD −44% |
+
+(Sharpe 2011–15 / 2016–23 / 2024–26, max DD over the full period. [`ranking_scores_size.csv`](reports/overnight/tables/ranking_scores_size.csv))
+
+- the hit rate is robust to a few huge gap nights, which a mean or Sharpe can't ignore. the cost-aware score (mean overnight minus the estimated round trip at your size) is the only score positive in all three periods (at $10k–$100k), with the smallest drawdowns, but its 2024–26 Sharpe is less steady across sizes and it fails at $250k.
+- **caveat:** this was tested after 2024–26 was known, across 40 combinations. the "every period, every size" result at a fixed lookback is the strong part. the exact winner isn't. the headline tables above stay on the frozen score. **paper trade the overnight hit rate alongside it.**
+
 ### missing ETFs? (out-of-universe test)
 
 added 25 commodity ETFs that were never in the study (URNJ, NUKZ, COPJ, SETM, RING, GOAU, SGDM, SGDJ, SLVP, SLX, PSLV, PHYS, SPPP, CEF, XLE, XES, IEO, PXJ, GSG, PDBC, KRBN, BATT, CUT, GNR, HAP):
@@ -337,6 +366,7 @@ optional: `KIBOT_DIR=/path/to/KIBOT make overnight` adds the 2016–23 5-min exi
 | `scripts/overnight_audit.py` | independent re-implementation, 15:30-signal re-run, lookahead scramble, $50k by year |
 | `scripts/overnight_auction_imbalance.py` | Arca imbalance feed: who pays in the auction, impact coefficient fit |
 | `scripts/overnight_risk.py` | risk stats and hedges for #1 at $50k |
+| `scripts/overnight_ranking.py` | 10 ranking scores × 4 lookbacks for #1, and by account size |
 | `scripts/overnight_auction_rules.py` | Sharpe waterfall, auction execution rules (participation cap, LOC cap, open floor) |
 | `reports/overnight/tables/` | every number above |
 
