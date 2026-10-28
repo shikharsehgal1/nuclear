@@ -16,7 +16,7 @@ net Sharpe for 2011–15 / 2016–23 / 2024–26. "fees" = per-share fees + SEC 
 | 4 | short-only (intraday leg alone) | 0.68 / 0.06 / 0.46 | −0.12 / −0.96 / −0.11 | −0.65 / −0.27 | don't |
 | — | everything else | — | — | — | trend, intraday momentum, EIA windows, pairs (USO/BNO, GLD/SLV, PPLT/PALL), roll timing, 5-min lead-lag: inconsistent or too small to beat costs |
 
-the VIX sizing and SPY hedge were found **after** OOS was known, so #1 and #2 are "promising, paper trade", not validated. the impact model is uncalibrated for auctions (only the auction **size** is measured), so a small account's true cost is somewhere between the "fees only" and "fees + impact" columns.
+the VIX sizing and SPY hedge were found **after** OOS was known, so #1 and #2 are "promising, paper trade", not validated. the impact coefficient now checks out against real auction price concessions (fitted 0.105 vs the 0.1 assumed, NYSE Arca imbalance feed, [auction theory](#auction-theory-who-pays-in-the-auction)), but on only 2 days, so treat "fees + impact" as the base case, not the worst case.
 
 **rules:**
 - **MOO/MOC orders only.** the price moves 14–28 bp in the first minute after the open, about the whole nightly edge (~17 bp)
@@ -25,7 +25,19 @@ the VIX sizing and SPY hedge were found **after** OOS was known, so #1 and #2 ar
 - 2024–26 was carried by uranium (without it, OOS Sharpe 0.29 even at flat cost)
 - paper trade first
 
-**risk, #1 at $25k:** fees + impact, 2024–26: 26%/yr. full 2011–26, fees only: Sharpe 1.26, 15%/yr, vol 12%, max DD −35%.
+**risk, #1 as you'd run it** ($50k, fees + impact, ADV ≥ $20M, 15:30 signal where hourly bars exist; [`risk_50k.csv`](reports/overnight/tables/risk_50k.csv)):
+
+| | 2011–15 | 2016–23 | 2024–26 | full |
+|---|---|---|---|---|
+| Sharpe | −0.94 | 0.51 | **1.41** | 0.28 |
+| return/yr | −11% | 5% | **23%** | 3% |
+| vol | 11% | 11% | 16% | 12% |
+| max DD | −51% | −25% | −18% | −54% |
+| worst / best month | −8% / +8% | −7% / +10% | −9% / +23% | |
+| months up | 42% | 47% | 59% | 47% |
+| beta to SPY | 0.16 | 0.11 | 0.22 | 0.14 |
+
+invested 80% of nights. the −54% is almost all 2011–15. for comparison, $25k with all names and fees only (no impact) is Sharpe 1.26 over the full period.
 
 **what $50k would have made** (#1, fees + impact, ADV ≥ $20M filter; [`audit_50k_by_year.csv`](reports/overnight/tables/audit_50k_by_year.csv)):
 
@@ -163,7 +175,20 @@ the strategy still makes money when VIX is high (Sharpe 1.1–1.6 above VIX 25),
 | **beta-neutral: hold long SPY ≈ −beta (avg 0.35x)** | **1.18 / 1.88 / 2.36** | −29% | **0.05** |
 | beta-neutral: hold long GDX | 0.95 / 1.91 / 2.59 | −26% | −0.09 |
 
-shorting a hedge overnight is the wrong way round: it adds to the short beta and pays away SPY/GDX's own overnight drift. what helps is the opposite: a small **long SPY** sized to the trailing beta makes it market-neutral (corr ~0) and lifts Sharpe in every period.
+**is a hedge worth it for #1? no.** #1 is long-only, beta ~0.14 to SPY, so the hedge would be a short. at $50k with fees + impact ([`hedges_50k.csv`](reports/overnight/tables/hedges_50k.csv)):
+
+| variant | Sharpe 2011–15 / 2016–23 / 2024–26 | max DD |
+|---|---|---|
+| **#1 unhedged** | **−0.94 / 0.51 / 1.41** | −54% |
+| short SPY overnight, ½ beta | −1.43 / 0.24 / 1.08 | −63% |
+| short SPY overnight, full beta | −1.89 / −0.06 / 0.70 | −71% |
+| short GDX overnight, full beta | −2.38 / −0.89 / 0.28 | −86% |
+| #2 LS, no hedge | −0.33 / −0.19 / 1.05 | −73% |
+| #2 LS + long-SPY hedge | −0.14 / −0.10 / 1.23 | −63% |
+
+the full-beta SPY hedge pays away SPY's own overnight drift (~4.4%/yr) plus ~3.5%/yr in fees, and cuts vol by under 1 point. the beta is too small to be worth hedging. the long-SPY hedge only helps #2, which is net short.
+
+for the LS book: shorting a hedge overnight is the wrong way round: it adds to the short beta and pays away SPY/GDX's own overnight drift. what helps is the opposite: a small **long SPY** sized to the trailing beta makes it market-neutral (corr ~0) and lifts Sharpe in every period.
 
 ## MOO/MOC check and everything post-costs
 
@@ -196,7 +221,30 @@ how to read it:
 - **impact is what kills the old periods**, not fees. the names it held traded a median ~$5M/day in 2016–19 vs ~$80M/day in 2026
 - in **2024–26 the long versions survive at $25k**, and at $100k only with the ADV floor. at $300k it's gone
 - long/short does worse than long-only once impact counts: the short leg doubles the shares you push through each auction
-- the impact model is a guess for auction orders. the truth for a $25k account is probably between the "fees only" and "+ impact" columns
+- the impact coefficient is now backed by real auction concessions (next section), so "+ impact" is the base case
+
+### auction theory: who pays in the auction
+
+the open and close are **call auctions**: all orders cross at one price, the one that matches the most shares. in that setup the price concession goes to whoever is left unmatched, the imbalance side, and whoever absorbs it gets paid (Kyle 1985, Madhavan 1992). NYSE Arca publishes the paired size, the imbalance and its side, and an indicative price before each auction. i pulled that feed (free TAQ samples, 2026-07-01/02, 54 ETFs, [`scripts/overnight_auction_imbalance.py`](scripts/overnight_auction_imbalance.py)):
+
+| | opens | closes | held names |
+|---|---|---|---|
+| auctions with a sell imbalance | 60% | 61% | |
+| median imbalance, share of auction | 24% | 13% | 12% |
+| auction price moved toward the imbalance side | **92%** | 78% | 84% |
+| median concession vs last reference price | 10 bp | 3.5 bp | 6 bp |
+| fitted k in `k × σ × sqrt(imbalance / auction)` | 0.145 | 0.055 | 0.083 |
+
+- **the theory holds.** the unmatched side pays almost every time, roughly in proportion to sqrt(imbalance / auction size).
+- **the impact model is calibrated.** the pooled fit is k = **0.105** against the 0.1 the backtest assumed. #1 trades one close and one open per night, so its cost is about the average of the two: unchanged.
+- **the open is the expensive leg.** it costs ~2.6× the close per unit of imbalance. thin opens are harsh: URNM's open moved 37–50 bp toward a buy imbalance both days, REMX's 26–51 bp toward a sell imbalance.
+- **closes lean sell (61%).** a MOC buy is usually on the paid side, consistent with the overnight premium being partly pay for taking the day's inventory overnight.
+
+**what this changes for live trading** (rules, not backtested; 2 days can't support a backtest):
+- read the closing imbalance before the cutoff. if it's a **sell** imbalance, your buy is paid to absorb it. if it's a large **buy** imbalance, you're adding to it.
+- use **limit-on-close** buys capped near the reference price instead of plain MOC, so a buy never fills deep into a buy imbalance. the risk is that you miss fills on the strongest nights.
+- size against the **paired + imbalance** shares the feed shows, not against ADV.
+- the open is where the cost is. a limit-on-open sell floored a few bp under the reference caps it. the risk is that you hold into the session, which gives back ~half the overnight gain by 10:30.
 
 ### missing ETFs? (out-of-universe test)
 
@@ -267,6 +315,8 @@ optional: `KIBOT_DIR=/path/to/KIBOT make overnight` adds the 2016–23 5-min exi
 | `src/sput_research/overnight/` | data split + walk-forward strategy |
 | `tests/test_overnight.py` | point-in-time tests (poisoned future data must not change picks/signals) |
 | `scripts/overnight_audit.py` | independent re-implementation, 15:30-signal re-run, lookahead scramble, $50k by year |
+| `scripts/overnight_auction_imbalance.py` | Arca imbalance feed: who pays in the auction, impact coefficient fit |
+| `scripts/overnight_risk.py` | risk stats and hedges for #1 at $50k |
 | `reports/overnight/tables/` | every number above |
 
 ## the fine print
