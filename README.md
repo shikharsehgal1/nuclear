@@ -22,6 +22,7 @@ the VIX sizing and SPY hedge were found **after** OOS was known, so #1 and #2 ar
 - **MOO/MOC orders only.** the price moves 14–28 bp in the first minute after the open, about the whole nightly edge (~17 bp)
 - **size ~$10–50k.** up to ~$100k with an ADV ≥ $20M filter and the long-only version. **cap each order at 10% of the auction** (URNM's closing auction was ~$300k): it lifts 2024–26 Sharpe 1.41 → 1.45 at $50k and 1.11 → 1.28 at $100k ([auction theory](#auction-theory-who-pays-in-the-auction))
 - plain MOC/MOO, no tight limits: limit-on-close caps and open floors both tested worse
+- **auction prints check out:** Yahoo's open/close match the real NYSE Arca auction prints (median gap 0.0 bp, held-night round trip within ±0.3 bp, 2016/2023/2026). with real auction sizes, the hit-rate version is Sharpe **1.78 / 32% a year / −17% max DD in 2024–26 at $50k** ([details](#real-auction-prints-2016--2023--2026-are-yahoos-open-and-close-what-youd-get))
 - **candidate upgrade:** rank on the overnight hit rate (share of nights up, 24m) instead of overnight − intraday. it beat the frozen score in every period at every size ([which ETFs to pick](#which-etfs-to-pick-rank-on-the-overnight-leg)). found after OOS, so paper trade it alongside
 - #2 needs a margin account and intraday short locates
 - 2024–26 was carried by uranium (without it, OOS Sharpe 0.29 even at flat cost)
@@ -296,6 +297,40 @@ the frozen rule ranks on the Sharpe of (overnight − intraday). that score was 
 - the hit rate is robust to a few huge gap nights, which a mean or Sharpe can't ignore. the cost-aware score (mean overnight minus the estimated round trip at your size) is the only score positive in all three periods (at $10k–$100k), with the smallest drawdowns, but its 2024–26 Sharpe is less steady across sizes and it fails at $250k.
 - **caveat:** this was tested after 2024–26 was known, across 40 combinations. the "every period, every size" result at a fixed lookback is the strong part. the exact winner isn't. the headline tables above stay on the frozen score. **paper trade the overnight hit rate alongside it.**
 
+### real auction prints, 2016 / 2023 / 2026 (are Yahoo's open and close what you'd get?)
+
+a live test on stocks found MOO fills off Yahoo's open by 6 bp on average (1.6 bp without one outlier). so i pulled every NYSE Arca **opening and closing auction print** for all 36 ETFs, for 2016, 2023 and 2026 to Oct 14, from the consolidated tape (Alpaca free plan, [`scripts/overnight_alpaca_auctions.py`](scripts/overnight_alpaca_auctions.py), [`scripts/overnight_open_check.py`](scripts/overnight_open_check.py)):
+
+| | 2016 | 2023 | 2026 |
+|---|---|---|---|
+| ETF-days with an opening print | 7,860 | 8,325 | 6,665 |
+| open = Yahoo open exactly | 87% | 94% | 85% |
+| close = Yahoo close exactly | 90% | 100% | 100% |
+| mean gap, open / close | +0.3 / +0.2 bp | −0.2 / 0.0 bp | −0.1 / 0.0 bp |
+| **round trip on the nights #1 held** (hit-rate ranking, + = better than the backtest) | +0.2 bp | −0.2 bp | −0.1 bp |
+
+- **no bias.** the median gap is 0.0 bp every year, and on held nights the round trip is within ±0.3 bp. the stock test's gap doesn't carry over to these ETFs.
+- the noisy opens are GDX (only 43% exact, 21% of days >10 bp off), XOP and UNG, but they average ~0 bp. the names #1 holds most (URNM, URA, SILJ, COPX) match exactly 92–94% of days and average within ±1 bp.
+- **same picks, auction prices:** each year's return moves by under 1 point, both ways (#1 hit-rate $50k: 2016 19.8 → 19.7%, 2023 −1.9 → −2.2%, 2026 3.0 → 3.0%).
+- **pick stability is the real risk.** re-ranking on auction prices flips borderline names. for the frozen gap-Sharpe ranking that moved 2023 by 8 points (6.8% → −0.8%). the hit-rate ranking moved under 1.5 points. one more reason to switch ([`auction_rerun.csv`](reports/overnight/tables/auction_rerun.csv)).
+
+**impact model v2: real auction sizes** ([`scripts/overnight_impact_v2.py`](scripts/overnight_impact_v2.py), [`impact_v2.csv`](reports/overnight/tables/impact_v2.csv)). v1 assumed every auction is 1.1% of daily $ volume. the prints say:
+- **opens are bigger, closes are smaller.** the median ETF is 1.29% open and 0.94% close (URNM 1.45% / 1.03%, URA 1.38% / 0.76%, SILJ 1.22% / 0.60%). you buy in the smaller one.
+- v2 uses the actual auction you trade into in 2016, 2023 and 2026, a per-ETF ratio to $ volume in other years, and the imbalance-fit coefficients (open 0.145, close 0.055).
+- **net effect: older years get worse, 2024–26 a bit better.** the names traded thinner before 2020, and today's auctions are larger than v1 assumed.
+
+**the trade, final numbers** (hit-rate ranking, ADV ≥ $20M, 15:30 signal, 15/VIX, 10% cap, MOC/MOO, impact v2):
+
+| account | Sharpe 2011–15 / 2016–23 / 2024–26 | full | return/yr 2024–26 | vol | max DD 2024–26 / full | years up |
+|---|---|---|---|---|---|---|
+| $10k | −0.29 / 0.91 / **1.91** | 0.80 | 35% | 16.5% | −18% / −37% | 9/16 |
+| $25k | −0.41 / 0.84 / **1.91** | 0.74 | 35% | 16.5% | −17% / −40% | 9/16 |
+| $50k | −0.70 / 0.67 / **1.78** | 0.55 | 32% | 16% | −17% / −45% | 8/16 |
+| $100k | −0.94 / 0.55 / **1.49** | 0.37 | 24% | 15% | −18% / −50% | 7/16 |
+| $250k | −1.21 / 0.37 / **1.17** | 0.13 | 16% | 13% | −18% / −52% | 8/16 |
+
+for comparison, the frozen ranking at $50k is −1.14 / 0.42 / 1.48. 2024–26 still leans on 2025 (uranium). 2023 (−4%) and 2026 to Oct 14 (+6%) were weak, and in those two years the frozen ranking did better (+5%, +8%): the hit rate's edge comes from 2016–22 and 2024–25.
+
 ### missing ETFs? (out-of-universe test)
 
 added 25 commodity ETFs that were never in the study (URNJ, NUKZ, COPJ, SETM, RING, GOAU, SGDM, SGDJ, SLVP, SLX, PSLV, PHYS, SPPP, CEF, XLE, XES, IEO, PXJ, GSG, PDBC, KRBN, BATT, CUT, GNR, HAP):
@@ -367,6 +402,9 @@ optional: `KIBOT_DIR=/path/to/KIBOT make overnight` adds the 2016–23 5-min exi
 | `scripts/overnight_audit.py` | independent re-implementation, 15:30-signal re-run, lookahead scramble, $50k by year |
 | `scripts/overnight_auction_imbalance.py` | Arca imbalance feed: who pays in the auction, impact coefficient fit |
 | `scripts/overnight_risk.py` | risk stats and hedges for #1 at $50k |
+| `scripts/overnight_alpaca_auctions.py` | NYSE Arca auction prints from the tape (Alpaca free plan; needs `ALPACA_KEY`/`ALPACA_SECRET` in `.env`). `make auctions` |
+| `scripts/overnight_open_check.py` | auction prints vs Yahoo, same-picks and re-ranked reruns |
+| `scripts/overnight_impact_v2.py` | impact model on real auction sizes, the final numbers |
 | `scripts/overnight_ranking.py` | 10 ranking scores × 4 lookbacks for #1, and by account size |
 | `scripts/overnight_auction_rules.py` | Sharpe waterfall, auction execution rules (participation cap, LOC cap, open floor) |
 | `reports/overnight/tables/` | every number above |

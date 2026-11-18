@@ -1,4 +1,4 @@
-.PHONY: overnight research ingest validate panel backtests robustness capacity report test lint
+.PHONY: overnight auctions research ingest validate panel backtests robustness capacity report test lint
 
 research: validate-config ingest panel test backtests robustness capacity report
 
@@ -49,3 +49,9 @@ overnight:
 	uv run python scripts/overnight_risk.py
 	uv run python scripts/overnight_auction_rules.py
 	uv run python scripts/overnight_ranking.py
+
+# needs ALPACA_KEY / ALPACA_SECRET in .env (free Alpaca market-data plan)
+auctions:
+	uv run python scripts/overnight_alpaca_auctions.py 2016 2023 2026
+	uv run python scripts/overnight_open_check.py
+	uv run python scripts/overnight_impact_v2.py

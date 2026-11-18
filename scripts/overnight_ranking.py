@@ -80,18 +80,24 @@ def scores(score: str, L: int, aum: float = AUM) -> dict:
     return out
 
 
-def book(score: str, L: int, aum: float = AUM, costs: bool = True) -> pd.Series:
+def book(score: str, L: int, aum: float = AUM, costs: bool = True, w_on: pd.DataFrame | None = None) -> pd.Series:
+    """Daily P&L. w_on: overnight weights to use instead of rebuilding them (same picks, different prices)."""
+    w_on = book_weights(score, L, aum) if w_on is None else w_on
+    on = P["on"][w_on.columns]
+    r = (w_on * on.fillna(0)).sum(axis=1)
+    if costs:
+        r = r - name_costs(w_on, aum).sum(axis=1)
+    return r.loc[r.ne(0).idxmax():]
+
+
+def book_weights(score: str, L: int, aum: float = AUM) -> pd.DataFrame:
     vs = vix_scale(P["on"].index)
     w = weights(P, members_from_scores(P, scores(score, L, aum), K))
     tilt = up_day_tilt(P, w, sig.reindex(columns=w.columns) if set(w.columns) <= set(sig.columns) else None)
     on = P["on"][w.columns]
     w_on = (w * tilt).mul(vs.reindex(w.index).fillna(1.0), axis=0).where(on.notna(), 0.0)
     auc = P["dollar_vol"][w.columns].rolling(63, min_periods=20).median().shift(1) * C["auction_share_of_adv"] / 2
-    w_on = np.minimum(w_on, (0.10 * auc / aum).reindex_like(w_on).fillna(0))
-    r = (w_on * on.fillna(0)).sum(axis=1)
-    if costs:
-        r = r - name_costs(w_on, aum).sum(axis=1)
-    return r.loc[r.ne(0).idxmax():]
+    return np.minimum(w_on, (0.10 * auc / aum).reindex_like(w_on).fillna(0))
 
 
 def main():
